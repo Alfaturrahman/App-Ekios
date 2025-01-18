@@ -3,14 +3,21 @@
 @section('title', 'Home Page')
 
 @section('content')
-    <div class="card" style="width: 18rem;">
-        <div class="card-body">
-        <h5 class="card-title">Judul Card</h5>
-        <p class="card-text">Ini adalah deskripsi singkat tentang isi card ini. Anda dapat menambahkan lebih banyak detail di sini.</p>
-        <button id="cardButton" class="btn btn-primary">Klik Saya</button>
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title">Selamat Datang di Home Page</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text">Ini adalah contoh konten untuk halaman home.</p>
+                        <button id="cardButton" class="btn btn-primary">Klik Saya!</button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
-
 @endsection
 
 @push('scripts')
@@ -20,7 +27,5 @@
             alert('Tombol di dalam card berhasil ditekan!');
         });
     });
-</script>
-
 </script>
 @endpush

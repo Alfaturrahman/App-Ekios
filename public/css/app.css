@@ -1,0 +1,22 @@
+.navbar {
+    padding-top: 0.5rem; /* Padding atas lebih kecil */
+    padding-bottom: 0.5rem; /* Padding bawah lebih kecil */
+}
+
+.navbar-brand {
+    font-size: 1.2rem; /* Ukuran font lebih kecil */
+}
+
+.nav-link {
+    font-size: 0.9rem; /* Ukuran font lebih kecil */
+    line-height: 1.2; /* Line height lebih kecil */
+}
+
+.navbar img {
+    width: 30px; /* Ukuran gambar lebih kecil */
+    height: 30px;
+}
+
+.navbar-nav .nav-item {
+    margin-bottom: 0; /* Hilangkan margin bawah */
+}

@@ -3,10 +3,26 @@
 @section('title', 'Registrasi HP')
 
 @section('content')
-    <div class="container mt-5">
-        <h1 class="mb-4">Registrasi HP</h1>
-
-        <!-- Tabel Registrasi HP -->
+<div class="container">
+    <div style="margin-left:-60px; margin-right: -60px">
+    <h1 class="mb-4">Registrasi HP</h1>
+    <div class="d-flex justify-content-end align-items-center mb-3">
+        <!-- Search -->
+        <form class="d-flex me-3" action="/search" method="GET" style="width: 250px;">
+            <div class="input-group">
+                <input type="text" class="form-control" placeholder="Search" name="q">
+                <button type="submit" class="btn btn-outline-secondary">
+                    <i class="fas fa-search"></i>
+                </button>
+            </div>
+        </form>
+        <!-- Add -->
+        <a href="/add" class="btn" style="background-color: #DCD135; color: black;">
+            <i class="fas fa-plus" style="color: black;"></i> Daftar MMS
+        </a>
+    </div>
+    <!-- Tabel-->
+    <div class="table-responsive">
         <table class="table table-bordered table-hover">
             <thead>
                 <tr>
@@ -35,7 +51,9 @@
                     <td>22 Juni 2024, 17:11</td>
                     <td>Complete</td>
                     <td>
-                        <button class="btn btn-success">✅️</button>
+                        <a href="/detail/1" class="btn btn-link text-secondary">
+                            <i class="fas fa-eye"></i>
+                        </a>
                     </td>
                 </tr>
                 <!-- Data 2 -->
@@ -50,10 +68,14 @@
                     <td>25 Juli 2024, 12:16</td>
                     <td>Waiting Approve QNSE Manager</td>
                     <td>
-                        <button class="btn btn-success">✅️</button>
+                        <a href="/detail/1" class="btn btn-link text-secondary">
+                            <i class="fas fa-eye"></i>
+                        </a>
                     </td>
                 </tr>
             </tbody>
         </table>
     </div>
+    </div>
+</div>
 @endsection

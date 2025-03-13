@@ -8,15 +8,19 @@
 }
 
 .nav-link {
-    font-size: 0.9rem; /* Ukuran font lebih kecil */
-    line-height: 1.2; /* Line height lebih kecil */
+    font-size: 0.9rem;
+    line-height: 1.2;
 }
 
 .navbar img {
-    width: 30px; /* Ukuran gambar lebih kecil */
+    width: 30px;
     height: 30px;
 }
 
 .navbar-nav .nav-item {
-    margin-bottom: 0; /* Hilangkan margin bawah */
+    margin-bottom: 0;
+}
+
+.modal-backdrop {
+    opacity: 0.5 !important; 
 }

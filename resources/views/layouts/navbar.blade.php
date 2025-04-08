@@ -59,7 +59,7 @@
                     <li class="nav-item me-4">
                         <a class="nav-link d-flex align-items-center" href="#">
                             <!-- Gambar Profil Bulat -->
-                            <img src="https://via.placeholder.com/40" alt="Profile" class="rounded-circle me-3" style="width: 40px; height: 40px;">
+                            <img src="/profile.png" alt="Profile" class="rounded-circle me-3" style="width: 40px; height: 40px;">
                             <div class="d-flex flex-column text-start">
                                 <span class="fw-bold">Hadian Nelvi</span>
                                 <small class="text-muted">System Analyst</small>

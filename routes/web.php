@@ -1,23 +1,26 @@
 <?php
-
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\Auth\RegisterController;
 
-/*
-|--------------------------------------------------------------------------
-| Web Routes
-|--------------------------------------------------------------------------
-|
-| Here is where you can register web routes for your application. These
-| routes are loaded by the RouteServiceProvider and all of them will
-| be assigned to the "web" middleware group. Make something great!
-|
-*/
-Route::get('/', function () {
-    return view('home');
+// Guest only (kalau belum login)
+Route::middleware('guest')->group(function () {
+    // Login
+    Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
+    Route::post('/login', [LoginController::class, 'login']);
+
+    // Register
+    Route::get('/register', [RegisterController::class, 'showRegistrationForm'])->name('register');
+    Route::post('/register', [RegisterController::class, 'register']);
 });
 
+// Authenticated only
+Route::middleware('auth')->group(function () {
+    // Dashboard (contoh)
+    Route::get('/', function () {
+        return view('<hrd-qhse/dashboard-hrd');
+    });
 
-// Registrasi HP Page
-Route::get('/register', function () {
-    return view('register');
+    // Logout
+    Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 });

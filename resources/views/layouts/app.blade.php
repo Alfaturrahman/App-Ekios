@@ -22,7 +22,9 @@
 </head>
 <body>
     <!-- Navbar -->
-    @include('layouts.navbar')
+    @if (!isset($hideNavbar))
+        @include('layouts.navbar')
+    @endif
 
     <!-- Page Content -->
     <div class="container mt-4">

@@ -61,17 +61,23 @@
                             <!-- Gambar Profil Bulat -->
                             <img src="/profile.png" alt="Profile" class="rounded-circle me-3" style="width: 40px; height: 40px;">
                             <div class="d-flex flex-column text-start">
-                                <span class="fw-bold">Hadian Nelvi</span>
-                                <small class="text-muted">System Analyst</small>
+                                <span class="fw-bold">{{ auth('employee')->user()->employee_name }}</span>
+                                <small class="text-muted">{{ auth('employee')->user()->jabatan->name ?? '-' }}</small>
                             </div>
                         </a>
                     </li>
 
-                    <!-- Icon Logout -->
+                    <!-- Logout Icon -->
                     <li class="nav-item">
-                        <a class="nav-link" href="#">
+                        <a class="nav-link" href="#"
+                        onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
                             <i class="fas fa-sign-out-alt fs-5"></i>
                         </a>
+
+                        <!-- Hidden logout form -->
+                        <form id="logout-form" action="{{ route('logout') }}" method="POST" style="display: none;">
+                            @csrf
+                        </form>
                     </li>
                 </ul>
             </div>

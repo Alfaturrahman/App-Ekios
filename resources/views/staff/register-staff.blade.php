@@ -378,6 +378,9 @@
         $offcanvas.find('p:contains("Submission Time:")').html(`<strong>Submission Time:</strong> -`);
         $offcanvas.find('.badge.bg-light').text('-');
     });
+    $(document).ready(function () {
+        
+    });
 </script>
 
 <!-- Tambahkan di sini -->

@@ -16,23 +16,33 @@ class LoginController extends Controller
     public function login(Request $request)
     {
         $credentials = $request->validate([
-            'email'    => ['required', 'email'],
-            'password' => ['required'],
+            'employee_badge' => ['required'],
+            'password'       => ['required'],
         ]);
 
-        if (Auth::attempt($credentials)) {
+        if (Auth::guard('employee')->attempt($credentials)) {
+
             $request->session()->regenerate();
-            return redirect()->intended('/'); // arahkan ke home/dashboard
+            $user = Auth::guard('employee')->user();
+            $jabatan = $user->jabatan?->name;
+
+            $jabatan = strtolower($user->jabatan?->name ?? '');
+
+            if ($jabatan === 'staff') {
+                return redirect()->route('register.staff');
+            } elseif (in_array($jabatan, ['hrd', 'qhse'])) {
+                return redirect()->route('dashboard.hrd');
+            }
         }
 
         return back()->withErrors([
-            'email' => 'Email atau password salah.',
-        ])->onlyInput('email');
+            'employee_badge' => 'Badge atau password salah.',
+        ])->onlyInput('employee_badge');
     }
 
     public function logout(Request $request)
     {
-        Auth::logout();
+        Auth::guard('employee')->logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
         return redirect('/login');

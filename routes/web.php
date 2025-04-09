@@ -46,6 +46,9 @@ Route::middleware('auth:employee')->group(function () {
         Route::get('/dashboard/hrd', [DashboardController::class, 'hrdIndex'])->name('dashboard.hrd');
         Route::post('/pengajuan/store', [PengajuanController::class, 'store'])->name('pengajuan.store');
         Route::get('/pengajuan/{id}', [PengajuanController::class, 'show'])->name('pengajuan.show');
+        Route::post('/pengajuan/{id}/approve', [PengajuanController::class, 'approve']);
+        Route::post('/pengajuan/{id}/reject', [PengajuanController::class, 'reject']);
+
     });
 
     // Staff akses halaman registrasi langsung

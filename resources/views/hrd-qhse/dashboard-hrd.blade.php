@@ -233,39 +233,40 @@
                             </thead>
                             <tbody>
                                 @foreach ($pengajuan as $index => $item)
-                                    <tr>
-                                        <td class="text-center">{{ $index + 1 }}</td>
-                                        <td>{{ $item->employee->employee_name }}</td>
-                                        <td>{{ $item->employee->department->department_name ?? '-' }}</td>
-                                        <td>{{ $item->brand_type }}</td>
-                                        <td>{{ $item->nama_hp }}</td>
-                                        <td>{{ $item->imei1 }}</td>
-                                        <td>{{ $item->submission_type }}</td>
-                                        <td>{{ \Carbon\Carbon::parse($item->created_at)->format('d M Y, H:i') }}</td>
-                                        <td>
-                                            @php
-                                                $status = $item->approve_HRD === 'approved' && $item->approve_QHSE === 'approved'
-                                                    ? 'Completed'
-                                                    : ($item->approve_HRD === 'rejected' || $item->approve_QHSE === 'rejected' ? 'Rejected' : 'Pending');
-                                            @endphp
-                                            <span class="badge bg-{{ $status === 'Completed' ? 'success' : ($status === 'Rejected' ? 'danger' : 'warning') }}">
-                                                {{ $status }}
-                                            </span>
-                                        </td>
-                                        <td class="text-center">
-                                            <button
-                                                class="btn btn-sm btn-outline-dark btn-detail"
-                                                data-id="{{ $item->pengajuan_id }}"
-                                                data-bs-toggle="offcanvas"
-                                                data-bs-target="#detailOffcanvas"
-                                            >
-                                                <i class="fas fa-eye text-dark"></i>
-                                            </button>
-                                        </td>
-                                    </tr>
+                                <tr>
+                                    <td class="text-center">{{ $index + 1 }}</td>
+                                    <td>{{ $item->employee->employee_name }}</td>
+                                    <td>{{ $item->employee->department->department_name ?? '-' }}</td>
+                                    <td>{{ $item->brand_type }}</td>
+                                    <td>{{ $item->nama_hp }}</td>
+                                    <td>{{ $item->imei1 }}</td>
+                                    <td>{{ $item->submission_type }}</td>
+                                    <td>{{ \Carbon\Carbon::parse($item->created_at)->format('d M Y, H:i') }}</td>
+                                    <td>
+                                        @php
+                                            $status = $item->status;
+                                            $badgeClass = match ($status) {
+                                                'Disetujui' => 'success',
+                                                'Ditolak HRD', 'Ditolak QHSE' => 'danger',
+                                                'Menunggu HRD', 'Menunggu QHSE' => 'warning',
+                                                default => 'secondary',
+                                            };
+                                        @endphp
+                                        <span class="badge bg-{{ $badgeClass }}">{{ $status }}</span>
+                                    </td>
+                                    <td class="text-center">
+                                        <button
+                                            class="btn btn-sm btn-outline-dark btn-detail"
+                                            data-id="{{ $item->pengajuan_id }}"
+                                            data-bs-toggle="offcanvas"
+                                            data-bs-target="#detailOffcanvas"
+                                        >
+                                            <i class="fas fa-eye text-dark"></i>
+                                        </button>
+                                    </td>
+                                </tr>
                                 @endforeach
                             </tbody>
-                            
                         </table>
                     </div>
                 </div>
@@ -416,7 +417,9 @@
         // Submit form
         $('#rejectForm').on('submit', function (e) {
             e.preventDefault();
+
             const reason = $('#rejectReason').val().trim();
+            const id = $('#detailOffcanvas').data('id');
 
             if (reason === '') {
                 Swal.fire({
@@ -428,20 +431,38 @@
                 return;
             }
 
-            console.log('Ditolak karena:', reason);
-
-            // Tutup modal, lalu tunggu 300ms sebelum Swal muncul
             $('#rejectModal').modal('hide');
 
-            setTimeout(() => {
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Ditolak',
-                    text: 'Permintaan telah berhasil ditolak.',
-                    timer: 2000,
-                    showConfirmButton: false
-                });
-            }, 350); // Timing > modal transition (300ms default)
+            $.ajax({
+                url: `/pengajuan/${id}/reject`,
+                type: 'POST',
+                data: {
+                    _token: $('meta[name="csrf-token"]').attr('content'),
+                    reason: reason
+                },
+                success: function (res) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Ditolak',
+                        text: 'Permintaan telah berhasil ditolak.',
+                        timer: 2000,
+                        showConfirmButton: false
+                    }).then(() => {
+                        location.reload();
+                    });
+
+                    const instance = bootstrap.Offcanvas.getInstance(document.getElementById('detailOffcanvas'));
+                    instance.hide();
+                },
+                error: function (xhr) {
+                    console.error(xhr.responseText);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Gagal!',
+                        text: 'Terjadi kesalahan saat menolak permintaan.',
+                    });
+                }
+            });
         });
 
         // Tombol Batal (Cancel)
@@ -462,6 +483,44 @@
         // Reset form saat modal ditutup
         $('#rejectModal').on('hidden.bs.modal', function () {
             $('#rejectForm')[0].reset();
+        });
+    });
+
+    $('#btnApprove').on('click', function () {
+        const id = $('#detailOffcanvas').data('id');
+
+        Swal.fire({
+            title: 'Yakin ingin menyetujui?',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Ya, Setujui',
+            cancelButtonText: 'Batal',
+            confirmButtonColor: '#28a745',
+            cancelButtonColor: '#6c757d'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.post(`/pengajuan/${id}/approve`, function (res) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Disetujui!',
+                        text: 'Permintaan telah disetujui.',
+                        timer: 2000,
+                        showConfirmButton: false
+                    }).then(() => {
+                        setTimeout(() => location.reload(), 500);
+                    });
+                    // Optional: Tutup Offcanvas, refresh tabel, dsb
+                    const instance = bootstrap.Offcanvas.getInstance(document.getElementById('detailOffcanvas'));
+                    instance.hide();
+                    // location.reload(); // kalau mau reload tabel
+                }).fail(function () {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Gagal!',
+                        text: 'Terjadi kesalahan saat menyetujui.',
+                    });
+                });
+            }
         });
     });
 
@@ -514,17 +573,26 @@
             $('#detailMeta').text(`by ${emp.employee_name ?? '-'} (${emp.employee_badge ?? '-'}), ${waktu}`);
             $('#detailSubmissionType').text(data.submission_type ?? '-');
 
-            let status = 'Pending', statusClass = 'bg-warning';
-            if (data.approve_HRD === 'approved' && data.approve_QHSE === 'approved') {
-                status = 'Completed';
-                statusClass = 'bg-success';
-            } else if (data.approve_HRD === 'rejected' || data.approve_QHSE === 'rejected') {
-                status = 'Rejected';
-                statusClass = 'bg-danger';
+            let statusText = data.status;
+            let statusClass = 'bg-secondary';
+
+            switch (statusText) {
+                case 'Disetujui':
+                    statusClass = 'bg-success';
+                    break;
+                case 'Ditolak QHSE':
+                case 'Ditolak HRD':
+                    statusClass = 'bg-danger';
+                    break;
+                case 'Menunggu QHSE':
+                case 'Menunggu HRD':
+                    statusClass = 'bg-warning';
+                    break;
             }
 
-            $('#detailStatus').text(status).removeClass().addClass(`badge ${statusClass}`);
-            $('#detailStatusText').text(status);
+            $('#detailStatus').text(statusText).removeClass().addClass(`badge ${statusClass}`);
+            $('#detailStatusText').text(statusText);
+
 
             // Info Pegawai 
             $('#detailEmployeeName').text(`${emp.employee_name ?? '-'} (${emp.employee_badge ?? '-'})`);

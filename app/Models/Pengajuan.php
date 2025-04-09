@@ -30,4 +30,14 @@ class Pengajuan extends Model
     {
         return $this->belongsTo(Employee::class, 'employee_id', 'employee_id');
     }
+
+    public function getStatusAttribute()
+    {
+        if ($this->approve_QHSE === 'rejected') return 'Ditolak QHSE';
+        if ($this->approve_HRD === 'rejected') return 'Ditolak HRD';
+        if (is_null($this->approve_QHSE)) return 'Menunggu QHSE';
+        if ($this->approve_QHSE === 'approved' && is_null($this->approve_HRD)) return 'Menunggu HRD';
+        if ($this->approve_QHSE === 'approved' && $this->approve_HRD === 'approved') return 'Disetujui';
+        return 'Tidak diketahui';
+    }
 }

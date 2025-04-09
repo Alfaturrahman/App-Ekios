@@ -20,6 +20,7 @@ class PengajuanController extends Controller
     public function show($id)
     {
         $pengajuan = Pengajuan::with(['employee.department', 'employee.jabatan'])->findOrFail($id);
+        $pengajuan->status = $pengajuan->status;
 
         return response()->json($pengajuan);
     }
@@ -61,5 +62,54 @@ class PengajuanController extends Controller
         ]);
 
         return response()->json(['status' => 'success']);
-}
+    }
+    public function approve($id)
+    {
+        $user = auth('employee')->user();
+        $pengajuan = Pengajuan::findOrFail($id);
+        $jabatan = strtolower($user->jabatan->name);
+
+        if ($jabatan === 'qhse') {
+            $pengajuan->approve_QHSE = 'approved';
+            $pengajuan->reason_QHSE = null;
+        } elseif ($jabatan === 'hrd') {
+            if ($pengajuan->approve_QHSE !== 'approved') {
+                return response()->json(['message' => 'Belum disetujui oleh QHSE'], 403);
+            }
+
+            $pengajuan->approve_HRD = 'approved';
+            $pengajuan->reason_HRD = null;
+        } else {
+            return response()->json(['message' => 'Tidak punya akses'], 403);
+        }
+
+        $pengajuan->save();
+
+        return response()->json(['message' => 'Pengajuan disetujui.']);
+    }
+
+    public function reject(Request $request, $id)
+    {
+        $request->validate([
+            'reason' => 'required|string'
+        ]);
+
+        $user = auth('employee')->user();
+        $pengajuan = Pengajuan::findOrFail($id);
+        $jabatan = strtolower($user->jabatan->name);
+
+        if ($jabatan === 'qhse') {
+            $pengajuan->approve_QHSE = 'rejected';
+            $pengajuan->reason_QHSE = $request->reason;
+        } elseif ($jabatan === 'hrd') {
+            $pengajuan->approve_HRD = 'rejected';
+            $pengajuan->reason_HRD = $request->reason;
+        } else {
+            return response()->json(['message' => 'Tidak punya akses'], 403);
+        }
+
+        $pengajuan->save();
+
+        return response()->json(['message' => 'Pengajuan ditolak.']);
+    }
 }

@@ -27,7 +27,7 @@ class Employee extends Authenticatable // supaya bisa login pakai guard
 
     public function department()
     {
-        return $this->belongsTo(Department::class, 'department_id');
+        return $this->belongsTo(Department::class, 'department_id', 'department_id');
     }
 
     public function jabatan()

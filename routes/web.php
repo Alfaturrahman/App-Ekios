@@ -3,6 +3,8 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
+use App\Http\Controllers\PengajuanController;
+use App\Http\Controllers\DashboardController;
 
 /*
 |--------------------------------------------------------------------------
@@ -41,9 +43,9 @@ Route::middleware('auth:employee')->group(function () {
     
     // Dashboard HRD dan QHSE (hak akses sama)
     Route::middleware('jabatan:HRD,QHSE')->group(function () {
-        Route::get('/dashboard/hrd', function () {
-            return view('hrd-qhse.dashboard-hrd');
-        })->name('dashboard.hrd');
+        Route::get('/dashboard/hrd', [DashboardController::class, 'hrdIndex'])->name('dashboard.hrd');
+        Route::post('/pengajuan/store', [PengajuanController::class, 'store'])->name('pengajuan.store');
+        Route::get('/pengajuan/{id}', [PengajuanController::class, 'show'])->name('pengajuan.show');
     });
 
     // Staff akses halaman registrasi langsung

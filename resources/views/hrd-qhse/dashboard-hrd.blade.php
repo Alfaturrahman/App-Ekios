@@ -105,6 +105,7 @@
                 </button>
             </div>
 
+            
             <!-- Modal -->
             <div class="modal fade" id="mmsModal" tabindex="-1" aria-labelledby="mmsModalLabel" aria-hidden="true" data-bs-backdrop="false">
                 <div class="modal-dialog modal-dialog-scrollable">
@@ -114,103 +115,102 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
-                    <form id="mmsForm">
-                        @csrf
-                        <div class="mb-3">
-                        <label for="employee_name" class="form-label">Name</label>
-                        <input type="text" class="form-control" id="employee_name" name="employee_name" placeholder="Insert Name" required>
-                        </div>
-            
-                        <!-- HP Merk dan Tipe -->
-                        <div class="row g-2 mb-3">
-                        <div class="col-md-6">
-                            <label for="submission_type" class="form-label">HP</label>
-                            <select class="form-select" id="submission_type" name="submission_type" required>
-                            <option selected disabled>Apple</option>
-                            <option value="Apple">Apple</option>
-                            <option value="Oppo">Oppo</option>
-                            <option value="Samsung">Samsung</option>
-                            </select>
-                        </div>
-                        <div class="col-md-6">
-                            <label for="hp_name" class="form-label">&nbsp;</label>
-                            <input type="text" class="form-control" id="hp_name" name="hp_name" placeholder="Iphone 13 PRO" required>
-                        </div>
-                        </div>
-            
-                        <!-- OS -->
-                        <div class="mb-3">
-                        <label class="form-label">OS : </label>
-                        <div class="form-check form-check-inline">
-                            <input class="form-check-input" type="radio" name="os" id="osAndroid" value="Android" required>
-                            <label class="form-check-label" for="osAndroid">Android</label>
-                        </div>
-                        <div class="form-check form-check-inline">
-                            <input class="form-check-input" type="radio" name="os" id="osApple" value="Apple" required>
-                            <label class="form-check-label" for="osApple">Apple</label>
-                        </div>
-                        </div>
-            
-                        <!-- IMEI -->
-                        <div class="mb-3">
-                        <label for="imei1" class="form-label">IMEI 1</label>
-                        <input type="text" class="form-control" id="imei1" name="imei1" placeholder="Insert Barcode Label" required>
-                        </div>
-                        <div class="mb-3">
-                        <label for="imei2" class="form-label">IMEI 2</label>
-                        <input type="text" class="form-control" id="imei2" name="imei2" placeholder="Insert Barcode Label" required>
-                        </div>
-            
-                        <!-- Application Type -->
-                        <div class="mb-3">
-                        <label class="form-label">Select Application Type</label>
-                            <div class="column">
-                                <div class="form-check form-check-inline">
-                                    <input class="form-check-input" type="radio" name="app_type" id="newEmployee" value="New Employee" required>
-                                    <label class="form-check-label" for="newEmployee">New Employee</label>
+                        <form id="mmsForm" enctype="multipart/form-data">
+                            @csrf
+                        
+                            <input type="hidden" name="employee_id" value="{{ auth('employee')->user()->employee_id }}">
+                        
+                            <div class="mb-3">
+                                <label class="form-label">Name</label>
+                                <input type="text" class="form-control" value="{{ auth('employee')->user()->employee_name }}" disabled>
+                            </div>
+                        
+                            <!-- Merk HP (brand_type) -->
+                            <div class="row g-2 mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">HP</label>
+                                    <select class="form-select" name="brand_type" required>
+                                        <option selected disabled>Pilih Merk</option>
+                                        <option value="Apple">Apple</option>
+                                        <option value="Oppo">Oppo</option>
+                                        <option value="Samsung">Samsung</option>
+                                    </select>
                                 </div>
-                                <div class="form-check form-check-inline">
-                                    <input class="form-check-input" type="radio" name="app_type" id="newPhone" value="New Mobile Phone Addition" required>
-                                    <label class="form-check-label" for="newPhone">New Mobile Phone Addition</label>
+                                <div class="col-md-6">
+                                    <label class="form-label">&nbsp;</label>
+                                    <input type="text" class="form-control" name="nama_hp" placeholder="Iphone 13 PRO" required>
                                 </div>
                             </div>
-                        </div>
-            
-                        <!-- Submission Reason -->
-                        <div class="mb-3">
-                        <label class="form-label">Submission Reason</label>
-                            <div class="column">
+                        
+                            <!-- OS -->
+                            <div class="mb-3">
+                                <label class="form-label">OS :</label>
                                 <div class="form-check form-check-inline">
-                                    <input class="form-check-input" type="radio" name="submission_reason" id="uploadFoto" value="Upload Foto" required>
-                                    <label class="form-check-label" for="uploadFoto">Upload Foto</label>
+                                    <input class="form-check-input" type="radio" name="os_type" value="Android" required>
+                                    <label class="form-check-label">Android</label>
                                 </div>
                                 <div class="form-check form-check-inline">
-                                    <input class="form-check-input" type="radio" name="submission_reason" id="takePhoto" value="Take Photo" required>
-                                    <label class="form-check-label" for="takePhoto">Take Photo</label>
+                                    <input class="form-check-input" type="radio" name="os_type" value="Apple" required>
+                                    <label class="form-check-label">Apple</label>
                                 </div>
                             </div>
-                        </div>
-            
-                        <!-- Upload -->
-                        <div class="mb-3">
-                        <label for="foto_depan" class="form-label">Upload foto bagian depan (JPG/PNG)</label>
-                        <input class="form-control" type="file" id="foto_depan" name="foto_depan" accept=".jpg,.jpeg,.png" required>
-                        </div>
-                        <div class="mb-3">
-                        <label for="foto_belakang" class="form-label">Upload foto bagian belakang (JPG/PNG)</label>
-                        <input class="form-control" type="file" id="foto_belakang" name="foto_belakang" accept=".jpg,.jpeg,.png" required>
-                        </div>
-            
-                        <!-- Action -->
-                        <div class="mt-4 d-flex justify-content-end gap-3">
-                        <button type="button" class="btn btn-light text-muted" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-warning text-dark fw-semibold">Submit</button>
-                        </div>
-                    </form>
+                        
+                            <!-- IMEI -->
+                            <div class="mb-3">
+                                <label class="form-label">IMEI 1</label>
+                                <input type="text" class="form-control" name="imei1" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">IMEI 2</label>
+                                <input type="text" class="form-control" name="imei2" required>
+                            </div>
+                        
+                            <!-- Application Type (submission_type) -->
+                            <div class="mb-3">
+                                <label class="form-label">Application Type</label>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="radio" name="submission_type" value="New Employee" required>
+                                    <label class="form-check-label">New Employee</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="radio" name="submission_type" value="New Mobile Phone Addition" required>
+                                    <label class="form-check-label">New Mobile Phone Addition</label>
+                                </div>
+                            </div>
+                        
+                            <!-- Submission Reason -->
+                            <div class="mb-3">
+                                <label class="form-label">Submission Reason</label>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="radio" name="submission_reason" value="Upload Foto" required>
+                                    <label class="form-check-label">Upload Foto</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="radio" name="submission_reason" value="Take Photo" required>
+                                    <label class="form-check-label">Take Photo</label>
+                                </div>
+                            </div>
+                        
+                            <!-- Upload -->
+                            <div class="mb-3">
+                                <label class="form-label">Foto Depan</label>
+                                <input type="file" class="form-control" name="foto_depan" accept=".jpg,.jpeg,.png" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Foto Belakang</label>
+                                <input type="file" class="form-control" name="foto_belakang" accept=".jpg,.jpeg,.png" required>
+                            </div>
+                        
+                            <div class="mt-4 d-flex justify-content-end gap-3">
+                                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                                <button type="submit" class="btn btn-warning">Submit</button>
+                            </div>
+                        </form>
                     </div>
                 </div>
                 </div>
             </div>
+  
   
             <!-- Table -->
             <div class="card card-table-wrapper mb-4 shadow-sm">
@@ -232,40 +232,40 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <!-- contoh data -->
-                                <tr>
-                                    <td class="text-center">1</td>
-                                    <td>Junanda Herman (375345)</td>
-                                    <td>Xiaomi</td>
-                                    <td>IPHONE</td>
-                                    <td>IPHONE 13</td>
-                                    <td>3312678534552</td>
-                                    <td>Karyawan Baru</td>
-                                    <td>22 Juni 2024, 17.11</td>
-                                    <td><span class="badge bg-success">Completed</span></td>
-                                    <td class="text-center">
-                                        <button class="btn btn-sm btn-outline-dark" data-bs-toggle="offcanvas" data-bs-target="#detailOffcanvas">
-                                            <i class="fas fa-eye text-dark"></i>
-                                        </button>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td class="text-center">2</td>
-                                    <td>Slebew (375345)</td>
-                                    <td>Xiaomi</td>
-                                    <td>IPHONE</td>
-                                    <td>IPHONE 13</td>
-                                    <td>3312678534552</td>
-                                    <td>Karyawan Baru</td>
-                                    <td>22 Juni 2024, 17.11</td>
-                                    <td><span class="badge bg-success">Completed</span></td>
-                                    <td class="text-center">
-                                        <button class="btn btn-sm btn-outline-dark" data-bs-toggle="offcanvas" data-bs-target="#detailOffcanvas">
-                                            <i class="fas fa-eye text-dark"></i>
-                                        </button>
-                                    </td>
-                                </tr>
+                                @foreach ($pengajuan as $index => $item)
+                                    <tr>
+                                        <td class="text-center">{{ $index + 1 }}</td>
+                                        <td>{{ $item->employee->employee_name }}</td>
+                                        <td>{{ $item->employee->department->department_name ?? '-' }}</td>
+                                        <td>{{ $item->brand_type }}</td>
+                                        <td>{{ $item->nama_hp }}</td>
+                                        <td>{{ $item->imei1 }}</td>
+                                        <td>{{ $item->submission_type }}</td>
+                                        <td>{{ \Carbon\Carbon::parse($item->created_at)->format('d M Y, H:i') }}</td>
+                                        <td>
+                                            @php
+                                                $status = $item->approve_HRD === 'approved' && $item->approve_QHSE === 'approved'
+                                                    ? 'Completed'
+                                                    : ($item->approve_HRD === 'rejected' || $item->approve_QHSE === 'rejected' ? 'Rejected' : 'Pending');
+                                            @endphp
+                                            <span class="badge bg-{{ $status === 'Completed' ? 'success' : ($status === 'Rejected' ? 'danger' : 'warning') }}">
+                                                {{ $status }}
+                                            </span>
+                                        </td>
+                                        <td class="text-center">
+                                            <button
+                                                class="btn btn-sm btn-outline-dark btn-detail"
+                                                data-id="{{ $item->pengajuan_id }}"
+                                                data-bs-toggle="offcanvas"
+                                                data-bs-target="#detailOffcanvas"
+                                            >
+                                                <i class="fas fa-eye text-dark"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                @endforeach
                             </tbody>
+                            
                         </table>
                     </div>
                 </div>
@@ -277,19 +277,18 @@
                     <h5 class="offcanvas-title" id="detailOffcanvasLabel">Detail Registrasi HP</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
                 </div>
-
+            
                 <div class="offcanvas-body">
                     <!-- Judul -->
-                    <h4 class="mb-2">OPPO - OPPO A37</h4>
-
-                    <span style="margin-bottom: 5px"> by Febby Fakhrian (221345), Monday, 8 Oktober 2024, 17:00 </span>
-
+                    <h4 class="mb-2" id="detailTitle">-</h4>
+                    <span id="detailMeta" style="margin-bottom: 5px">-</span>
+            
                     <!-- Badges -->
                     <div class="mb-3">
-                        <span class="badge bg-light text-dark me-2">Penambahan HP Baru</span>
-                        <span class="badge bg-success">Completed</span>
+                        <span class="badge bg-light text-dark me-2" id="detailSubmissionType">-</span>
+                        <span class="badge" id="detailStatus">-</span>
                     </div>
-
+            
                     <!-- Tabs -->
                     <ul class="nav nav-tabs mb-3" id="detailTab" role="tablist">
                         <li class="nav-item">
@@ -299,7 +298,7 @@
                             <button class="nav-link" data-bs-toggle="tab" data-bs-target="#historyTabCanvas">History Status</button>
                         </li>
                     </ul>
-
+            
                     <!-- Tab Content -->
                     <div class="tab-content">
                         <!-- Tab Info -->
@@ -308,75 +307,70 @@
                             <div class="accordion mb-4" id="accordionInfoCanvas">
                                 <div class="accordion-item border">
                                     <h2 class="accordion-header" id="headingOneCanvas">
-                                        <button class="accordion-button collapsed fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOneCanvas" aria-expanded="false" aria-controls="collapseOneCanvas">
+                                        <button class="accordion-button collapsed fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOneCanvas">
                                             Employee Information
                                         </button>
                                     </h2>
-                                    <div id="collapseOneCanvas" class="accordion-collapse collapse" aria-labelledby="headingOneCanvas" data-bs-parent="#accordionInfoCanvas">
+                                    <div id="collapseOneCanvas" class="accordion-collapse collapse" data-bs-parent="#accordionInfoCanvas">
                                         <div class="accordion-body">
-                                            <div class="row mb-2"><div class="col-md-4"><strong>Employee Name</strong></div><div class="col-md-8">Jassy (200457)</div></div>
-                                            <div class="row mb-2"><div class="col-md-4"><strong>Department</strong></div><div class="col-md-8">DIGI</div></div>
-                                            <div class="row mb-2"><div class="col-md-4"><strong>Email</strong></div><div class="col-md-8">jassy@example.com</div></div>
-                                            <div class="row mb-2"><div class="col-md-4"><strong>Phone Number</strong></div><div class="col-md-8">+62 812 3456 7890</div></div>
+                                            <div class="row mb-2">
+                                                <div class="col-md-4"><strong>Employee Name</strong></div>
+                                                <div class="col-md-8" id="detailEmployeeName">-</div>
+                                            </div>
+                                            <div class="row mb-2">
+                                                <div class="col-md-4"><strong>Department</strong></div>
+                                                <div class="col-md-8" id="detailDepartment">-</div>
+                                            </div>
+                                            <div class="row mb-2">
+                                                <div class="col-md-4"><strong>Jabatan</strong></div>
+                                                <div class="col-md-8" id="detailEmail">-</div>
+                                            </div>
+                                            <div class="row mb-2">
+                                                <div class="col-md-4"><strong>Phone Number</strong></div>
+                                                <div class="col-md-8" id="detailPhone">-</div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-
+            
                             <!-- Device Info -->
                             <h6 class="fw-bold mb-3">Device Information</h6>
-                            <p><strong>HP:</strong> OPPO</p>
-                            <p><strong>Barcode Label:</strong> -</p>
-                            <p><strong>IMEI 1:</strong> 92823132191</p>
-                            <p><strong>IMEI 2:</strong> 92823132320</p>
-                            <p><strong>Application Type:</strong> New Employee</p>
-                            <p><strong>Submission Time:</strong> 8 Oktober 2024, 17.00</p>
-                            <p><strong>Status:</strong> Waiting Approve QHSE</p>
-
+                            <p><strong>HP:</strong> <span id="detailBrand">-</span></p>
+                            <p><strong>Barcode Label:</strong> <span id="detailBarcode">-</span></p>
+                            <p><strong>IMEI 1:</strong> <span id="detailIMEI1">-</span></p>
+                            <p><strong>IMEI 2:</strong> <span id="detailIMEI2">-</span></p>
+                            <p><strong>Application Type:</strong> <span id="detailSubmission">-</span></p>
+                            <p><strong>Submission Time:</strong> <span id="detailWaktu">-</span></p>
+                            <p><strong>Status:</strong> <span id="detailStatusText">-</span></p>
+            
                             <!-- Images -->
                             <div class="row">
                                 <div class="col-md-6 text-center">
-                                    <img src="https://via.placeholder.com/200x300?text=Back+Phone" class="img-fluid rounded mb-2" style="max-height: 200px;">
+                                    <img id="detailFotoBelakang" class="img-fluid rounded mb-2" style="max-height: 200px;" src="https://via.placeholder.com/200x300?text=Back+Phone">
                                     <p>Photo of the back of the phone</p>
                                 </div>
                                 <div class="col-md-6 text-center">
-                                    <img src="https://via.placeholder.com/200x300?text=Front+Phone" class="img-fluid rounded mb-2" style="max-height: 200px;">
+                                    <img id="detailFotoDepan" class="img-fluid rounded mb-2" style="max-height: 200px;" src="https://via.placeholder.com/200x300?text=Front+Phone">
                                     <p>Photo of the front of the phone</p>
                                 </div>
                             </div>
-
+            
                             <!-- Action Buttons -->
                             <div class="d-flex justify-content-end mt-4">
                                 <button class="btn btn-danger me-3" id="btnReject">Reject</button>
-                                <button class="btn btn-success">Approve</button>
+                                <button class="btn btn-success" id="btnApprove">Approve</button>
                             </div>
                         </div>
-
+            
                         <!-- Tab History -->
                         <div class="tab-pane fade" id="historyTabCanvas">
                             <div class="row mt-4">
-                                <div class="col-md-3">
-                                    <div class="mb-5"><div class="fw-semibold">Thursday</div><div class="text-muted small">4 Oktober 2024 09.47</div></div>
-                                    <div class="mb-5"><div class="fw-semibold">Wednesday</div><div class="text-muted small">3 Oktober 2024 17.46</div></div>
-                                    <div class="mb-5"><div class="fw-semibold">Tuesday</div><div class="text-muted small">1 Oktober 2024 19.00</div></div>
-                                    <div class="mb-5"><div class="fw-semibold">Tuesday</div><div class="text-muted small">2 Oktober 2024 17.16</div></div>
-                                    <div><div class="fw-semibold">Monday</div><div class="text-muted small">1 Oktober 2024 17.00</div></div>
+                                <div class="col-md-3" id="historyDateList"></div>
+                                <div class="col-md-1 d-flex flex-column align-items-center position-relative" id="historyLine">
+                                    <!-- Garis dan titik-titik status -->
                                 </div>
-                                <div class="col-md-1 d-flex flex-column align-items-center position-relative">
-                                    <div class="position-absolute top-0 start-50 translate-middle-x bg-warning" style="width: 4px; height: 100%; z-index: 1;"></div>
-                                    <div class="bg-warning rounded-circle" style="width: 14px; height: 14px; margin-top: 4px; z-index: 2;"></div>
-                                    <div class="bg-warning rounded-circle" style="width: 14px; height: 14px; margin-top: 66px; z-index: 2;"></div>
-                                    <div class="bg-warning rounded-circle" style="width: 14px; height: 14px; margin-top: 66px; z-index: 2;"></div>
-                                    <div class="bg-warning rounded-circle" style="width: 14px; height: 14px; margin-top: 66px; z-index: 2;"></div>
-                                    <div class="bg-warning rounded-circle" style="width: 14px; height: 14px; margin-top: 66px; z-index: 2;"></div>
-                                </div>
-                                <div class="col-md-8">
-                                    <div class="mb-5"><div class="fw-semibold">Completed</div><div class="text-muted small">-</div></div>
-                                    <div class="mb-5"><div class="fw-semibold">Approved by QHSE</div><div class="text-muted small">Hadian Nelvi (039902)</div></div>
-                                    <div class="mb-5"><div class="fw-semibold">Waiting Approve QHSE</div><div class="text-muted small">-</div></div>
-                                    <div class="mb-5"><div class="fw-semibold">Approved by HRD</div><div class="text-muted small">Hadian Nelvi (039902)</div></div>
-                                    <div><div class="fw-semibold">Register MMS</div><div class="text-muted small">-</div></div>
-                                </div>
+                                <div class="col-md-8" id="historyStatusList"></div>
                             </div>
                         </div>
                     </div>
@@ -470,6 +464,102 @@
             $('#rejectForm')[0].reset();
         });
     });
+
+    $('#mmsForm').on('submit', function (e) {
+        e.preventDefault();
+
+        const formData = new FormData(this);
+
+        $.ajax({
+            type: "POST",
+            url: "{{ route('pengajuan.store') }}",
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function (res) {
+                Swal.fire('Success', 'Pengajuan berhasil dikirim!', 'success');
+                $('#mmsModal').modal('hide');
+                $('#mmsForm')[0].reset();
+            },
+            error: function (xhr) {
+                Swal.fire('Error', 'Gagal mengirim pengajuan!', 'error');
+                console.error(xhr.responseText);
+            }
+        });
+    }); 
+
+    // Klik tombol detail
+    $(document).on('click', '.btn-detail', function () {
+        const id = $(this).data('id');
+        $('#detailOffcanvas').data('id', id); // Simpan sementara
+    });
+
+    // Saat offcanvas muncul
+    $('#detailOffcanvas').on('shown.bs.offcanvas', function () {
+        const id = $(this).data('id');
+        if (!id) return;
+
+        $.get(`/pengajuan/${id}`, function (data) {
+
+
+            const emp = data.employee;
+            console.log(emp);
+            
+            const waktu = new Date(data.created_at).toLocaleString('id-ID', {
+                weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+                hour: '2-digit', minute: '2-digit'
+            });
+
+            $('#detailTitle').text(`${data.brand_type ?? '-'} - ${data.nama_hp ?? '-'}`);
+            $('#detailMeta').text(`by ${emp.employee_name ?? '-'} (${emp.employee_badge ?? '-'}), ${waktu}`);
+            $('#detailSubmissionType').text(data.submission_type ?? '-');
+
+            let status = 'Pending', statusClass = 'bg-warning';
+            if (data.approve_HRD === 'approved' && data.approve_QHSE === 'approved') {
+                status = 'Completed';
+                statusClass = 'bg-success';
+            } else if (data.approve_HRD === 'rejected' || data.approve_QHSE === 'rejected') {
+                status = 'Rejected';
+                statusClass = 'bg-danger';
+            }
+
+            $('#detailStatus').text(status).removeClass().addClass(`badge ${statusClass}`);
+            $('#detailStatusText').text(status);
+
+            // Info Pegawai 
+            $('#detailEmployeeName').text(`${emp.employee_name ?? '-'} (${emp.employee_badge ?? '-'})`);
+            $('#detailDepartment').text(emp.department.department_name ?? '-');
+            $('#detailEmail').text(emp.jabatan.name ?? '-');
+            $('#detailPhone').parent().hide(); // kalau mau sembunyikan kolom "Phone Number"
+
+            // Info Device
+            $('#detailBrand').text(data.brand_type ?? '-');
+            $('#detailBarcode').text(data.barcode_label ?? '-');
+            $('#detailIMEI1').text(data.imei1 ?? '-');
+            $('#detailIMEI2').text(data.imei2 ?? '-');
+            $('#detailSubmission').text(data.submission_type ?? '-');
+            $('#detailWaktu').text(waktu);
+
+            // Gambar
+            $('#detailFotoDepan').attr('src', data.foto_depan ? `/storage/${data.foto_depan}` : 'https://via.placeholder.com/200x300?text=Front+Phone');
+            $('#detailFotoBelakang').attr('src', data.foto_belakang ? `/storage/${data.foto_belakang}` : 'https://via.placeholder.com/200x300?text=Back+Phone');
+
+            // Reset Riwayat
+            $('#historyDateList, #historyLine, #historyStatusList').empty();
+        });
+    });
+
+    // Klik luar area untuk menutup
+    $(document).on('click', function (e) {
+        const $offcanvas = $('#detailOffcanvas');
+        const isOpen = $offcanvas.hasClass('show');
+        const isInside = $(e.target).closest('#detailOffcanvas').length > 0;
+        if (isOpen && !isInside) {
+            const instance = bootstrap.Offcanvas.getOrCreateInstance($offcanvas[0]);
+            instance.hide();
+        }
+    });
+
 </script>
 
 <script>
@@ -600,55 +690,7 @@
         $('#osUnknown').text(osDevices.unknown);
     });
 
-    // Buka Offcanvas & isi data
-    $(document).on('click', '[data-bs-toggle="offcanvas"]', function () {
-        const row = $(this).closest('tr');
-        const nama = row.find('td:eq(1)').text();
-        const brand = row.find('td:eq(2)').text();
-        const tipe = row.find('td:eq(4)').text();
-        const imei = row.find('td:eq(5)').text();
-        const tipePengajuan = row.find('td:eq(6)').text();
-        const waktu = row.find('td:eq(7)').text();
 
-        const $offcanvas = $('#detailOffcanvas');
-        $offcanvas.find('h4').text(`${brand} - ${tipe}`);
-        $offcanvas.find('p:contains("HP:")').html(`<strong>HP:</strong> ${brand}`);
-        $offcanvas.find('p:contains("IMEI 1:")').html(`<strong>IMEI 1:</strong> ${imei}`);
-        $offcanvas.find('p:contains("Application Type:")').html(`<strong>Application Type:</strong> ${tipePengajuan}`);
-        $offcanvas.find('p:contains("Submission Time:")').html(`<strong>Submission Time:</strong> ${waktu}`);
-        $offcanvas.find('.badge.bg-light').text(tipePengajuan);
-    });
-
-    // Bersihkan backdrop dobel
-    $(document).on('shown.bs.offcanvas', function () {
-        const $backdrops = $('.offcanvas-backdrop');
-        if ($backdrops.length > 1) {
-            $backdrops.slice(1).remove();
-        }
-    });
-
-    // Klik luar area untuk tutup offcanvas
-    $(document).on('click', function (e) {
-        const $offcanvas = $('#detailOffcanvas');
-        const isOpen = $offcanvas.hasClass('show');
-        const isInside = $(e.target).closest('#detailOffcanvas').length > 0;
-
-        if (isOpen && !isInside) {
-            const instance = bootstrap.Offcanvas.getOrCreateInstance($offcanvas[0]);
-            instance.hide();
-        }
-    });
-
-    // Reset konten saat offcanvas ditutup
-    $('#detailOffcanvas').on('hidden.bs.offcanvas', function () {
-        const $offcanvas = $(this);
-        $offcanvas.find('h4').text(``);
-        $offcanvas.find('p:contains("HP:")').html(`<strong>HP:</strong> -`);
-        $offcanvas.find('p:contains("IMEI 1:")').html(`<strong>IMEI 1:</strong> -`);
-        $offcanvas.find('p:contains("Application Type:")').html(`<strong>Application Type:</strong> -`);
-        $offcanvas.find('p:contains("Submission Time:")').html(`<strong>Submission Time:</strong> -`);
-        $offcanvas.find('.badge.bg-light').text('-');
-    });
 </script>
 
 

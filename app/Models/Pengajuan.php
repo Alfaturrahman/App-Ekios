@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Pengajuan extends Model
 {
     protected $table = 'tbl_pengajuan';
+    protected $primaryKey = 'pengajuan_id';
 
     protected $fillable = [
         'employee_id',
@@ -27,6 +28,6 @@ class Pengajuan extends Model
 
     public function employee()
     {
-        return $this->belongsTo(Employee::class, 'employee_id');
+        return $this->belongsTo(Employee::class, 'employee_id', 'employee_id');
     }
 }

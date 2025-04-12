@@ -366,13 +366,7 @@
             
                         <!-- Tab History -->
                         <div class="tab-pane fade" id="historyTabCanvas">
-                            <div class="row mt-4">
-                                <div class="col-md-3" id="historyDateList"></div>
-                                <div class="col-md-1 d-flex flex-column align-items-center position-relative" id="historyLine">
-                                    <!-- Garis dan titik-titik status -->
-                                </div>
-                                <div class="col-md-8" id="historyStatusList"></div>
-                            </div>
+                            <div id="historyContent" class="mt-4"></div>
                         </div>
                     </div>
                 </div>
@@ -408,20 +402,23 @@
 
 @push('scripts')
 <script>
+    const currentUserRole = "{{ auth('employee')->user()->jabatan->name ?? '-' }}";
+
+    let registerChart, statusChart, osChart;
+
     $(document).ready(function () {
-        // Buka modal
+        /** ==================== MODAL REJECT ==================== **/
         $('#btnReject').on('click', function () {
             $('#rejectModal').modal('show');
         });
 
-        // Submit form
         $('#rejectForm').on('submit', function (e) {
             e.preventDefault();
 
             const reason = $('#rejectReason').val().trim();
             const id = $('#detailOffcanvas').data('id');
 
-            if (reason === '') {
+            if (!reason) {
                 Swal.fire({
                     icon: 'warning',
                     title: 'Oops...',
@@ -440,16 +437,14 @@
                     _token: $('meta[name="csrf-token"]').attr('content'),
                     reason: reason
                 },
-                success: function (res) {
+                success: function () {
                     Swal.fire({
                         icon: 'success',
                         title: 'Ditolak',
                         text: 'Permintaan telah berhasil ditolak.',
                         timer: 2000,
                         showConfirmButton: false
-                    }).then(() => {
-                        location.reload();
-                    });
+                    }).then(() => location.reload());
 
                     const instance = bootstrap.Offcanvas.getInstance(document.getElementById('detailOffcanvas'));
                     instance.hide();
@@ -465,10 +460,8 @@
             });
         });
 
-        // Tombol Batal (Cancel)
         $('#rejectModal .btn-secondary').on('click', function () {
             $('#rejectModal').modal('hide');
-
             setTimeout(() => {
                 Swal.fire({
                     icon: 'info',
@@ -480,172 +473,189 @@
             }, 300);
         });
 
-        // Reset form saat modal ditutup
         $('#rejectModal').on('hidden.bs.modal', function () {
             $('#rejectForm')[0].reset();
         });
-    });
 
-    $('#btnApprove').on('click', function () {
-        const id = $('#detailOffcanvas').data('id');
+        /** ==================== APPROVE ==================== **/
+        $('#btnApprove').on('click', function () {
+            const id = $('#detailOffcanvas').data('id');
 
-        Swal.fire({
-            title: 'Yakin ingin menyetujui?',
-            icon: 'question',
-            showCancelButton: true,
-            confirmButtonText: 'Ya, Setujui',
-            cancelButtonText: 'Batal',
-            confirmButtonColor: '#28a745',
-            cancelButtonColor: '#6c757d'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                $.post(`/pengajuan/${id}/approve`, function (res) {
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Disetujui!',
-                        text: 'Permintaan telah disetujui.',
-                        timer: 2000,
-                        showConfirmButton: false
-                    }).then(() => {
-                        setTimeout(() => location.reload(), 500);
+            Swal.fire({
+                title: 'Yakin ingin menyetujui?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Ya, Setujui',
+                cancelButtonText: 'Batal',
+                confirmButtonColor: '#28a745',
+                cancelButtonColor: '#6c757d'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.post(`/pengajuan/${id}/approve`, function () {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Disetujui!',
+                            text: 'Permintaan telah disetujui.',
+                            timer: 2000,
+                            showConfirmButton: false
+                        }).then(() => setTimeout(() => location.reload(), 500));
+
+                        const instance = bootstrap.Offcanvas.getInstance(document.getElementById('detailOffcanvas'));
+                        instance.hide();
+                    }).fail(function () {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Gagal!',
+                            text: 'Terjadi kesalahan saat menyetujui.',
+                        });
                     });
-                    // Optional: Tutup Offcanvas, refresh tabel, dsb
-                    const instance = bootstrap.Offcanvas.getInstance(document.getElementById('detailOffcanvas'));
-                    instance.hide();
-                    // location.reload(); // kalau mau reload tabel
-                }).fail(function () {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Gagal!',
-                        text: 'Terjadi kesalahan saat menyetujui.',
-                    });
-                });
-            }
-        });
-    });
-
-    $('#mmsForm').on('submit', function (e) {
-        e.preventDefault();
-
-        const formData = new FormData(this);
-
-        $.ajax({
-            type: "POST",
-            url: "{{ route('pengajuan.store') }}",
-            data: formData,
-            processData: false,
-            contentType: false,
-            success: function (res) {
-                Swal.fire('Success', 'Pengajuan berhasil dikirim!', 'success');
-                $('#mmsModal').modal('hide');
-                $('#mmsForm')[0].reset();
-            },
-            error: function (xhr) {
-                Swal.fire('Error', 'Gagal mengirim pengajuan!', 'error');
-                console.error(xhr.responseText);
-            }
-        });
-    }); 
-
-    // Klik tombol detail
-    $(document).on('click', '.btn-detail', function () {
-        const id = $(this).data('id');
-        $('#detailOffcanvas').data('id', id); // Simpan sementara
-    });
-
-    // Saat offcanvas muncul
-    $('#detailOffcanvas').on('shown.bs.offcanvas', function () {
-        const id = $(this).data('id');
-        if (!id) return;
-
-        $.get(`/pengajuan/${id}`, function (data) {
-
-
-            const emp = data.employee;
-            console.log(emp);
-            
-            const waktu = new Date(data.created_at).toLocaleString('id-ID', {
-                weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
-                hour: '2-digit', minute: '2-digit'
+                }
             });
-
-            $('#detailTitle').text(`${data.brand_type ?? '-'} - ${data.nama_hp ?? '-'}`);
-            $('#detailMeta').text(`by ${emp.employee_name ?? '-'} (${emp.employee_badge ?? '-'}), ${waktu}`);
-            $('#detailSubmissionType').text(data.submission_type ?? '-');
-
-            let statusText = data.status;
-            let statusClass = 'bg-secondary';
-
-            switch (statusText) {
-                case 'Disetujui':
-                    statusClass = 'bg-success';
-                    break;
-                case 'Ditolak QHSE':
-                case 'Ditolak HRD':
-                    statusClass = 'bg-danger';
-                    break;
-                case 'Menunggu QHSE':
-                case 'Menunggu HRD':
-                    statusClass = 'bg-warning';
-                    break;
-            }
-
-            $('#detailStatus').text(statusText).removeClass().addClass(`badge ${statusClass}`);
-            $('#detailStatusText').text(statusText);
-
-
-            // Info Pegawai 
-            $('#detailEmployeeName').text(`${emp.employee_name ?? '-'} (${emp.employee_badge ?? '-'})`);
-            $('#detailDepartment').text(emp.department.department_name ?? '-');
-            $('#detailEmail').text(emp.jabatan.name ?? '-');
-            $('#detailPhone').parent().hide(); // kalau mau sembunyikan kolom "Phone Number"
-
-            // Info Device
-            $('#detailBrand').text(data.brand_type ?? '-');
-            $('#detailBarcode').text(data.barcode_label ?? '-');
-            $('#detailIMEI1').text(data.imei1 ?? '-');
-            $('#detailIMEI2').text(data.imei2 ?? '-');
-            $('#detailSubmission').text(data.submission_type ?? '-');
-            $('#detailWaktu').text(waktu);
-
-            // Gambar
-            $('#detailFotoDepan').attr('src', data.foto_depan ? `/storage/${data.foto_depan}` : 'https://via.placeholder.com/200x300?text=Front+Phone');
-            $('#detailFotoBelakang').attr('src', data.foto_belakang ? `/storage/${data.foto_belakang}` : 'https://via.placeholder.com/200x300?text=Back+Phone');
-
-            // Reset Riwayat
-            $('#historyDateList, #historyLine, #historyStatusList').empty();
         });
-    });
 
-    // Klik luar area untuk menutup
-    $(document).on('click', function (e) {
-        const $offcanvas = $('#detailOffcanvas');
-        const isOpen = $offcanvas.hasClass('show');
-        const isInside = $(e.target).closest('#detailOffcanvas').length > 0;
-        if (isOpen && !isInside) {
-            const instance = bootstrap.Offcanvas.getOrCreateInstance($offcanvas[0]);
-            instance.hide();
-        }
-    });
+        /** ==================== FORM PENGAJUAN ==================== **/
+        $('#mmsForm').on('submit', function (e) {
+            e.preventDefault();
 
-</script>
+            const formData = new FormData(this);
 
-<script>
-    let registerChart, statusChart, osChart;
+            $.ajax({
+                type: "POST",
+                url: "{{ route('pengajuan.store') }}",
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function () {
+                    Swal.fire('Success', 'Pengajuan berhasil dikirim!', 'success');
+                    $('#mmsModal').modal('hide');
+                    $('#mmsForm')[0].reset();
+                },
+                error: function (xhr) {
+                    Swal.fire('Error', 'Gagal mengirim pengajuan!', 'error');
+                    console.error(xhr.responseText);
+                }
+            });
+        });
 
-    $(document).ready(function () {
+        /** ==================== DETAIL OFFCANVAS ==================== **/
+        $(document).on('click', '.btn-detail', function () {
+            const id = $(this).data('id');
+            $('#detailOffcanvas').data('id', id);
+        });
+
+        $('#detailOffcanvas').on('shown.bs.offcanvas', function () {
+            const id = $(this).data('id');
+            if (!id) return;
+
+            $.get(`/pengajuan/${id}`, function (data) {
+                const emp = data.employee;
+                const waktu = new Date(data.created_at).toLocaleString('id-ID', {
+                    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+                    hour: '2-digit', minute: '2-digit'
+                });
+
+                // Set data
+                $('#detailTitle').text(`${data.brand_type ?? '-'} - ${data.nama_hp ?? '-'}`);
+                $('#detailMeta').text(`by ${emp.employee_name ?? '-'} (${emp.employee_badge ?? '-'}), ${waktu}`);
+                $('#detailSubmissionType').text(data.submission_type ?? '-');
+
+                let statusText = data.status;
+                let statusClass = 'bg-secondary';
+                switch (statusText) {
+                    case 'Disetujui': statusClass = 'bg-success'; break;
+                    case 'Ditolak QHSE':
+                    case 'Ditolak HRD': statusClass = 'bg-danger'; break;
+                    case 'Menunggu QHSE':
+                    case 'Menunggu HRD': statusClass = 'bg-warning'; break;
+                }
+
+                $('#detailStatus').text(statusText).removeClass().addClass(`badge ${statusClass}`);
+                $('#detailStatusText').text(statusText);
+                $('#detailEmployeeName').text(`${emp.employee_name ?? '-'} (${emp.employee_badge ?? '-'})`);
+                $('#detailDepartment').text(emp.department?.department_name ?? '-');
+                $('#detailEmail').text(emp.jabatan?.name ?? '-');
+                $('#detailPhone').parent().hide();
+                $('#detailBrand').text(data.brand_type ?? '-');
+                $('#detailBarcode').text(data.barcode_label ?? '-');
+                $('#detailIMEI1').text(data.imei1 ?? '-');
+                $('#detailIMEI2').text(data.imei2 ?? '-');
+                $('#detailSubmission').text(data.submission_type ?? '-');
+                $('#detailWaktu').text(waktu);
+
+                $('#detailFotoDepan').attr('src', data.foto_depan ? `/storage/${data.foto_depan}` : 'https://via.placeholder.com/200x300?text=Front+Phone');
+                $('#detailFotoBelakang').attr('src', data.foto_belakang ? `/storage/${data.foto_belakang}` : 'https://via.placeholder.com/200x300?text=Back+Phone');
+
+                const $historyContent = $('#historyContent');
+                $historyContent.empty();
+
+                const histories = data.histories || [];
+
+                if (histories.length > 0) {
+                    const timelineItems = histories.map((item, index) => {
+                        const tanggal = new Date(item.created_at).toLocaleString('id-ID', {
+                            weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+                            hour: '2-digit', minute: '2-digit'
+                        });
+
+                        return `
+                            <div class="row align-items-center mb-4">
+                                <div class="col-md-3">
+                                    <div class="fw-semibold">${tanggal.split(',')[0]}</div>
+                                    <div class="text-muted small">${tanggal}</div>
+                                </div>
+                                <div class="col-md-1 d-flex flex-column align-items-center position-relative">
+                                    <div class="timeline-dot"></div>
+                                </div>
+                                <div class="col-md-8">
+                                    <div class="fw-semibold">${item.status}</div>
+                                    <div class="text-muted small">${item.by_name ?? '-'} (${item.user_badge ?? '-'})</div>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+
+                    // Bungkus semua item dengan garis vertikal 1x
+                    $historyContent.html(`
+                        <div class="position-relative">
+                            <div class="vertical-line-full"></div>
+                            ${timelineItems}
+                        </div>
+                    `);
+                } else {
+                    $historyContent.html('<div class="text-muted">Tidak ada data.</div>');
+                }
+                $('#btnApprove, #btnReject').hide();
+
+                if (currentUserRole === 'QHSE' && statusText === 'Menunggu QHSE') {
+                    $('#btnApprove, #btnReject').show();
+                }
+                if (currentUserRole === 'HRD' && statusText === 'Menunggu HRD') {
+                    $('#btnApprove, #btnReject').show();
+                }
+            });
+        });
+
+        /** ==================== CLOSE OFFCANVAS BY CLICK OUTSIDE ==================== **/
+        $(document).on('click', function (e) {
+            const $offcanvas = $('#detailOffcanvas');
+            const isOpen = $offcanvas.hasClass('show');
+            const isInside = $(e.target).closest('#detailOffcanvas').length > 0;
+
+            if (isOpen && !isInside) {
+                const instance = bootstrap.Offcanvas.getOrCreateInstance($offcanvas[0]);
+                instance.hide();
+            }
+        });
+
+        /** ==================== DASHBOARD CHART & TABLE ==================== **/
         $('#year').datepicker({
             format: "yyyy",
             viewMode: "years",
             minViewMode: "years",
             autoclose: true,
-            endDate: new Date() // agar maksimal tahun sekarang
-        }).datepicker('setDate', new Date()); // langsung pilih tahun sekarang
-    });
+            endDate: new Date()
+        }).datepicker('setDate', new Date());
 
-    // Tab Dashboard
-    $(document).ready(function () {
-        // Inisialisasi DataTable
         const hpTable = $('#hpTable').DataTable({
             paging: true,
             pageLength: 10,
@@ -664,19 +674,15 @@
                 }
             },
             initComplete: function () {
-                $('#customSearchWrapper').html(`
-                    <input type="text" id="customSearchInput" class="form-control" placeholder="Cari...">
-                `);
+                $('#customSearchWrapper').html(`<input type="text" id="customSearchInput" class="form-control" placeholder="Cari...">`);
                 $('#customSearchInput').on('keyup', function () {
                     hpTable.search(this.value).draw();
                 });
             }
         });
 
-        // Sembunyikan search default
         $('#hpTable_filter').hide();
 
-        // Data dummy untuk dashboard
         const monthlyRegister = {
             labels: ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'],
             counts: [20, 30, 50, 60, 55, 48, 52, 45, 28, 60, 58, 22]
@@ -688,7 +694,6 @@
         const osDevices = { ios: 6721, android: 165, unknown: 114 };
         const totalOS = osDevices.ios + osDevices.android + osDevices.unknown;
 
-        // Chart: Registrasi Bulanan
         registerChart = new ApexCharts(document.querySelector("#registerChart"), {
             chart: { type: 'line', height: 300, toolbar: { show: false } },
             series: [{ name: 'New Registered', data: monthlyRegister.counts }],
@@ -699,10 +704,9 @@
         });
         registerChart.render();
 
-        // Chart: Status Registrasi
         statusChart = new ApexCharts(document.querySelector("#statusChart"), {
             chart: { type: 'donut', height: 300 },
-            series: [registerStatus.registered, registerStatus.checking, registerStatus.rejected],
+            series: Object.values(registerStatus),
             labels: ['Registered', 'Checking', 'Rejected'],
             colors: ['#27ae60', '#f1c40f', '#e74c3c'],
             legend: { position: 'bottom' },
@@ -724,10 +728,9 @@
         });
         statusChart.render();
 
-        // Chart: OS Devices
         osChart = new ApexCharts(document.querySelector("#osChart"), {
             chart: { type: 'donut', height: 300 },
-            series: [osDevices.ios, osDevices.android, osDevices.unknown],
+            series: Object.values(osDevices),
             labels: ['iOS', 'Android', 'Unknown'],
             colors: ['#9b59b6', '#2ecc71', '#95a5a6'],
             legend: { position: 'bottom' },
@@ -749,7 +752,6 @@
         });
         osChart.render();
 
-        // Tampilkan nilai status dan OS
         $('#statusRegistered').text(registerStatus.registered);
         $('#statusChecking').text(registerStatus.checking);
         $('#statusRejected').text(registerStatus.rejected);
@@ -757,9 +759,8 @@
         $('#osAndroid').text(osDevices.android);
         $('#osUnknown').text(osDevices.unknown);
     });
-
-
 </script>
+
 
 
 <style>
@@ -882,6 +883,33 @@
 
     .tab-pane {
         transition: opacity 0.3s ease-in-out;
+    }
+    #historyDateList > div,
+    #historyLine > div,
+    #historyStatusList > div {
+        min-height: 70px; /* Atur tinggi tetap agar semua kolom sejajar */
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    .timeline-dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background-color: #F6B543;
+        z-index: 2;
+        flex-shrink: 0;
+    }
+
+    .vertical-line-full {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left:226px;
+        width: 3px;
+        background-color: #F6B543;
+        z-index: 0;
     }
 </style>
 

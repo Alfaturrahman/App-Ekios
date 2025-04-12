@@ -41,20 +41,21 @@ Route::middleware('auth:employee')->group(function () {
         abort(403, 'Unauthorized');
     });
     
-    // Dashboard HRD dan QHSE (hak akses sama)
-    Route::middleware('jabatan:HRD,QHSE')->group(function () {
-        Route::get('/dashboard/hrd', [DashboardController::class, 'hrdIndex'])->name('dashboard.hrd');
+    // Semua user (HRD, QHSE, STAFF) yang bisa akses pengajuan
+    Route::middleware('jabatan:HRD,QHSE,STAFF')->group(function () {
         Route::post('/pengajuan/store', [PengajuanController::class, 'store'])->name('pengajuan.store');
         Route::get('/pengajuan/{id}', [PengajuanController::class, 'show'])->name('pengajuan.show');
-        Route::post('/pengajuan/{id}/approve', [PengajuanController::class, 'approve']);
-        Route::post('/pengajuan/{id}/reject', [PengajuanController::class, 'reject']);
-
     });
 
-    // Staff akses halaman registrasi langsung
+    // HRD & QHSE khusus
+    Route::middleware('jabatan:HRD,QHSE')->group(function () {
+        Route::get('/dashboard/hrd', [DashboardController::class, 'hrdIndex'])->name('dashboard.hrd');
+        Route::post('/pengajuan/{id}/approve', [PengajuanController::class, 'approve']);
+        Route::post('/pengajuan/{id}/reject', [PengajuanController::class, 'reject']);
+    });
+
+    // STAFF khusus
     Route::middleware('jabatan:STAFF')->group(function () {
-        Route::get('/register-hp', function () {
-            return view('staff.register-staff'); // atau folder sesuai kamu
-        })->name('register.staff');
+        Route::get('/register/staff', [DashboardController::class, 'staffIndex'])->name('register.staff');
     });
 });

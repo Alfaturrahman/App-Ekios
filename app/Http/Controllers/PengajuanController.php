@@ -5,22 +5,37 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Pengajuan;
 use App\Models\Employee;
+use App\Models\PengajuanHistory;
 use Illuminate\Support\Facades\Storage;
 
 class PengajuanController extends Controller
 {
-
     public function index()
     {
         $pengajuan = Pengajuan::with('employee')->latest()->get();
-
         return view('dashboard.hrd', compact('pengajuan'));
     }
 
     public function show($id)
     {
-        $pengajuan = Pengajuan::with(['employee.department', 'employee.jabatan'])->findOrFail($id);
-        $pengajuan->status = $pengajuan->status;
+        $pengajuan = Pengajuan::with(['employee.department', 'employee.jabatan', 'histories'])->findOrFail($id);
+
+        // Mapping status gabungan
+        if ($pengajuan->approve_QHSE === 'pending') {
+            $status = 'Menunggu QHSE';
+        } elseif ($pengajuan->approve_QHSE === 'approved' && $pengajuan->approve_HRD === 'pending') {
+            $status = 'Menunggu HRD';
+        } elseif ($pengajuan->approve_QHSE === 'approved' && $pengajuan->approve_HRD === 'approved') {
+            $status = 'Disetujui';
+        } elseif ($pengajuan->approve_QHSE === 'rejected') {
+            $status = 'Ditolak QHSE';
+        } elseif ($pengajuan->approve_HRD === 'rejected') {
+            $status = 'Ditolak HRD';
+        } else {
+            $status = 'Status tidak diketahui';
+        }
+
+        $pengajuan->status = $status;
 
         return response()->json($pengajuan);
     }
@@ -39,13 +54,13 @@ class PengajuanController extends Controller
             'foto_belakang' => 'required|image|mimes:jpeg,jpg,png',
         ]);
 
-        // Simulasi: cari atau buat employee (harusnya based on ID, ini contoh)
-        $employeeId = $request->employee_id;
+        $user = auth('employee')->user();
+        $employeeId = $request->employee_id ?? $user->employee_id;
 
         $fotoDepanPath = $request->file('foto_depan')->store('pengajuan/foto_depan', 'public');
         $fotoBelakangPath = $request->file('foto_belakang')->store('pengajuan/foto_belakang', 'public');
 
-        Pengajuan::create([
+        $pengajuan = Pengajuan::create([
             'employee_id' => $employeeId,
             'brand_type' => $request->brand_type,
             'nama_hp' => $request->nama_hp,
@@ -61,8 +76,18 @@ class PengajuanController extends Controller
             'foto_belakang' => $fotoBelakangPath,
         ]);
 
+        PengajuanHistory::create([
+            'pengajuan_id' => $pengajuan->pengajuan_id,
+            'status' => 'Created Submission',
+            'note' => $request->submission_reason,
+            'by_name' => $user->employee_name,
+            'user_badge' => $user->employee_badge,
+            'robadge' => strtolower($user->jabatan->name ?? 'employee'),
+        ]);
+
         return response()->json(['status' => 'success']);
     }
+
     public function approve($id)
     {
         $user = auth('employee')->user();
@@ -72,6 +97,15 @@ class PengajuanController extends Controller
         if ($jabatan === 'qhse') {
             $pengajuan->approve_QHSE = 'approved';
             $pengajuan->reason_QHSE = null;
+
+            PengajuanHistory::create([
+                'pengajuan_id' => $pengajuan->pengajuan_id,
+                'status' => 'Approved by QHSE',
+                'note' => null,
+                'by_name' => $user->employee_name,
+                'user_badge' => $user->employee_badge,
+                'role' => $jabatan,
+            ]);
         } elseif ($jabatan === 'hrd') {
             if ($pengajuan->approve_QHSE !== 'approved') {
                 return response()->json(['message' => 'Belum disetujui oleh QHSE'], 403);
@@ -79,6 +113,15 @@ class PengajuanController extends Controller
 
             $pengajuan->approve_HRD = 'approved';
             $pengajuan->reason_HRD = null;
+
+            PengajuanHistory::create([
+                'pengajuan_id' => $pengajuan->pengajuan_id,
+                'status' => 'Approved by HRD',
+                'note' => null,
+                'by_name' => $user->employee_name,
+                'user_badge' => $user->employee_badge,
+                'role' => $jabatan,
+            ]);
         } else {
             return response()->json(['message' => 'Tidak punya akses'], 403);
         }
@@ -101,9 +144,27 @@ class PengajuanController extends Controller
         if ($jabatan === 'qhse') {
             $pengajuan->approve_QHSE = 'rejected';
             $pengajuan->reason_QHSE = $request->reason;
+
+            PengajuanHistory::create([
+                'pengajuan_id' => $pengajuan->pengajuan_id,
+                'status' => 'Rejected by QHSE',
+                'note' => $request->reason,
+                'by_name' => $user->employee_name,
+                'user_badge' => $user->employee_badge,
+                'role' => $jabatan,
+            ]);
         } elseif ($jabatan === 'hrd') {
             $pengajuan->approve_HRD = 'rejected';
             $pengajuan->reason_HRD = $request->reason;
+
+            PengajuanHistory::create([
+                'pengajuan_id' => $pengajuan->pengajuan_id,
+                'status' => 'Rejected by HRD',
+                'note' => $request->reason,
+                'by_name' => $user->employee_name,
+                'user_badge' => $user->employee_badge,
+                'role' => $jabatan,
+            ]);
         } else {
             return response()->json(['message' => 'Tidak punya akses'], 403);
         }

@@ -95,6 +95,7 @@
                 </div>
             </div>
         </div>
+        
 
         <!-- Tab Registrasi -->
         <div class="tab-pane fade" id="registrasi" role="tabpanel" aria-labelledby="registrasi-tab">
@@ -646,119 +647,118 @@
                 instance.hide();
             }
         });
-
-        /** ==================== DASHBOARD CHART & TABLE ==================== **/
-        $('#year').datepicker({
-            format: "yyyy",
-            viewMode: "years",
-            minViewMode: "years",
-            autoclose: true,
-            endDate: new Date()
-        }).datepicker('setDate', new Date());
-
-        const hpTable = $('#hpTable').DataTable({
-            paging: true,
-            pageLength: 10,
-            lengthChange: false,
-            searching: true,
-            ordering: true,
-            info: false,
-            language: {
-                search: "Cari:",
-                zeroRecords: "Tidak ada data ditemukan",
-                paginate: {
-                    first: "Pertama",
-                    last: "Terakhir",
-                    next: "Berikutnya",
-                    previous: "Sebelumnya"
-                }
-            },
-            initComplete: function () {
-                $('#customSearchWrapper').html(`<input type="text" id="customSearchInput" class="form-control" placeholder="Cari...">`);
-                $('#customSearchInput').on('keyup', function () {
-                    hpTable.search(this.value).draw();
-                });
-            }
-        });
-
-        $('#hpTable_filter').hide();
-
-        const monthlyRegister = {
-            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'],
-            counts: [20, 30, 50, 60, 55, 48, 52, 45, 28, 60, 58, 22]
-        };
-
-        const registerStatus = { registered: 36, checking: 54, rejected: 10 };
-        const totalStatus = registerStatus.registered + registerStatus.checking + registerStatus.rejected;
-
-        const osDevices = { ios: 6721, android: 165, unknown: 114 };
-        const totalOS = osDevices.ios + osDevices.android + osDevices.unknown;
-
-        registerChart = new ApexCharts(document.querySelector("#registerChart"), {
-            chart: { type: 'line', height: 300, toolbar: { show: false } },
-            series: [{ name: 'New Registered', data: monthlyRegister.counts }],
-            xaxis: { categories: monthlyRegister.labels },
-            stroke: { curve: 'smooth', width: 3 },
-            markers: { size: 4 },
-            colors: ['#00b894']
-        });
-        registerChart.render();
-
-        statusChart = new ApexCharts(document.querySelector("#statusChart"), {
-            chart: { type: 'donut', height: 300 },
-            series: Object.values(registerStatus),
-            labels: ['Registered', 'Checking', 'Rejected'],
-            colors: ['#27ae60', '#f1c40f', '#e74c3c'],
-            legend: { position: 'bottom' },
-            plotOptions: {
-                pie: {
-                    donut: {
-                        size: '70%',
-                        labels: {
-                            show: true,
-                            total: {
-                                show: true,
-                                label: 'Total',
-                                formatter: () => totalStatus
-                            }
-                        }
-                    }
-                }
-            }
-        });
-        statusChart.render();
-
-        osChart = new ApexCharts(document.querySelector("#osChart"), {
-            chart: { type: 'donut', height: 300 },
-            series: Object.values(osDevices),
-            labels: ['iOS', 'Android', 'Unknown'],
-            colors: ['#9b59b6', '#2ecc71', '#95a5a6'],
-            legend: { position: 'bottom' },
-            plotOptions: {
-                pie: {
-                    donut: {
-                        size: '70%',
-                        labels: {
-                            show: true,
-                            total: {
-                                show: true,
-                                label: 'Total',
-                                formatter: () => totalOS
-                            }
-                        }
-                    }
-                }
-            }
-        });
-        osChart.render();
-
-        $('#statusRegistered').text(registerStatus.registered);
-        $('#statusChecking').text(registerStatus.checking);
-        $('#statusRejected').text(registerStatus.rejected);
-        $('#osIOS').text(osDevices.ios);
-        $('#osAndroid').text(osDevices.android);
-        $('#osUnknown').text(osDevices.unknown);
     });
+
+    $(document).ready(function () {
+    // Inisialisasi Chart: Register
+    registerChart = new ApexCharts(document.querySelector("#registerChart"), {
+        chart: { type: 'line', height: 300 },
+        series: [{ name: 'New Registered', data: [] }],
+        xaxis: { categories: [] },
+        stroke: { curve: 'smooth', width: 3 },
+        markers: { size: 4 },
+        colors: ['#00b894'],
+        legend: { position: 'bottom' } // ⬅️ Tambah ini
+    });
+    registerChart.render();
+
+    // Inisialisasi Chart: Status (Donut)
+    statusChart = new ApexCharts(document.querySelector("#statusChart"), {
+        chart: { type: 'donut', height: 300 },
+        labels: ['Registered', 'Checking', 'Rejected'],
+        series: [],
+        legend: { position: 'bottom' } // ⬅️ Tambah ini
+    });
+    statusChart.render();
+
+    // Inisialisasi Chart: OS (Donut)
+    osChart = new ApexCharts(document.querySelector("#osChart"), {
+        chart: { type: 'donut', height: 300 },
+        labels: ['iOS', 'Android', 'Unknown'],
+        series: [],
+        legend: { position: 'bottom' } // ⬅️ Tambah ini
+    });
+    osChart.render();
+
+    // Memanggil data dashboard dan mengupdate chart
+    fetchDashboardData();
+
+    // Auto refresh setiap 60 detik
+    setInterval(fetchDashboardData, 60000);
+});
+
+// Fungsi untuk mengambil data dan memperbarui chart
+function fetchDashboardData() {
+    $.getJSON('{{ route("dashboard.data") }}', function (data) {
+
+        if (!data) {
+            console.error("No data received.");
+            return;
+        }
+
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+
+        // Update Chart: Register
+        if (registerChart) {
+            console.log("Updating register chart with data:", data.monthly);
+            registerChart.updateSeries([{
+                name: 'New Registered',
+                data: data.monthly
+            }]);
+            registerChart.updateOptions({
+                xaxis: { categories: months }
+            });
+        }
+
+        // Update Chart: Status
+        const totalStatus = data.registerStatus.registered + data.registerStatus.checking + data.registerStatus.rejected;
+        if (statusChart) {
+            statusChart.updateSeries(Object.values(data.registerStatus));
+            statusChart.updateOptions({
+                plotOptions: {
+                    pie: {
+                        donut: {
+                            labels: {
+                                total: {
+                                    formatter: () => totalStatus
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Update Chart: OS
+        const totalOS = data.osDevices.ios + data.osDevices.android + data.osDevices.unknown;
+        if (osChart) {
+            osChart.updateSeries(Object.values(data.osDevices));
+            osChart.updateOptions({
+                plotOptions: {
+                    pie: {
+                        donut: {
+                            labels: {
+                                total: {
+                                    formatter: () => totalOS
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Update DOM info
+        $('#statusRegistered').text(data.registerStatus.registered);
+        $('#statusChecking').text(data.registerStatus.checking);
+        $('#statusRejected').text(data.registerStatus.rejected);
+        $('#osIOS').text(data.osDevices.ios);
+        $('#osAndroid').text(data.osDevices.android);
+        $('#osUnknown').text(data.osDevices.unknown);
+    }).fail(function (xhr, status, error) {
+        console.error("Error fetching dashboard data:", error);
+    });
+}
 </script>
 
 

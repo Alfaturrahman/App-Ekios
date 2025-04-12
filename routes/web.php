@@ -41,7 +41,7 @@ Route::middleware('auth:employee')->group(function () {
         abort(403, 'Unauthorized');
     });
     
-    // Semua user (HRD, QHSE, STAFF) yang bisa akses pengajuan
+        // Semua user (HRD, QHSE, STAFF) yang bisa akses pengajuan
     Route::middleware('jabatan:HRD,QHSE,STAFF')->group(function () {
         Route::post('/pengajuan/store', [PengajuanController::class, 'store'])->name('pengajuan.store');
         Route::get('/pengajuan/{id}', [PengajuanController::class, 'show'])->name('pengajuan.show');
@@ -50,6 +50,7 @@ Route::middleware('auth:employee')->group(function () {
     // HRD & QHSE khusus
     Route::middleware('jabatan:HRD,QHSE')->group(function () {
         Route::get('/dashboard/hrd', [DashboardController::class, 'hrdIndex'])->name('dashboard.hrd');
+        Route::get('/dashboard/data', [DashboardController::class, 'getDashboardData'])->name('dashboard.data');
         Route::post('/pengajuan/{id}/approve', [PengajuanController::class, 'approve']);
         Route::post('/pengajuan/{id}/reject', [PengajuanController::class, 'reject']);
     });

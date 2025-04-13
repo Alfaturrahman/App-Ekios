@@ -23,12 +23,8 @@
                         <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="departmentDropdown" data-bs-toggle="dropdown" aria-expanded="false">
                             <i class="fas fa-building me-2"></i> All Department
                         </button>
-                        <ul class="dropdown-menu" aria-labelledby="departmentDropdown">
-                            <li><a class="dropdown-item" href="#">All Department</a></li>
-                            <li><a class="dropdown-item" href="#">IT</a></li>
-                            <li><a class="dropdown-item" href="#">HR</a></li>
-                            <li><a class="dropdown-item" href="#">Finance</a></li>
-                            <li><a class="dropdown-item" href="#">Marketing</a></li>
+                        <ul class="dropdown-menu" id="departmentMenu" aria-labelledby="departmentDropdown">
+                            <!-- Akan diisi via JS -->
                         </ul>
                     </div>
                 </div>
@@ -39,7 +35,7 @@
                         <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-3">
                             <h5 class="mb-3 mb-md-0">New Registered Mobile</h5>
                             <div class="input-group" style="max-width: 180px;">
-                                <input type="text" id="year" class="form-control" placeholder="Select Year" readonly>
+                                <input type="text" id="yearPicker" class="form-control" placeholder="Pilih Tahun" readonly>
                                 <span class="input-group-text">
                                     <i class="fas fa-calendar-alt"></i>
                                 </span>
@@ -406,6 +402,9 @@
     const currentUserRole = "{{ auth('employee')->user()->jabatan->name ?? '-' }}";
 
     let registerChart, statusChart, osChart;
+    let selectedYear = new Date().getFullYear(); // default: tahun sekarang
+    let selectedDepartment = ''; // default: semua department
+
 
     $(document).ready(function () {
         /** ==================== MODAL REJECT ==================== **/
@@ -650,115 +649,153 @@
     });
 
     $(document).ready(function () {
-    // Inisialisasi Chart: Register
-    registerChart = new ApexCharts(document.querySelector("#registerChart"), {
-        chart: { type: 'line', height: 300 },
-        series: [{ name: 'New Registered', data: [] }],
-        xaxis: { categories: [] },
-        stroke: { curve: 'smooth', width: 3 },
-        markers: { size: 4 },
-        colors: ['#00b894'],
-        legend: { position: 'bottom' } // ⬅️ Tambah ini
+
+        $('#yearPicker').datepicker({
+            format: "yyyy",
+            viewMode: "years",
+            minViewMode: "years",
+            autoclose: true
+        }).on('changeDate', function (e) {
+            selectedYear = e.format(0, "yyyy");
+            fetchDashboardData();
+        });
+
+        $('#yearPicker').val(selectedYear); // supaya input kelihatan tahun sekarang
+
+        // Inisialisasi Chart: Register
+        registerChart = new ApexCharts(document.querySelector("#registerChart"), {
+            chart: { type: 'line', height: 300 },
+            series: [{ name: 'New Registered', data: [] }],
+            xaxis: { categories: [] },
+            stroke: { curve: 'smooth', width: 3 },
+            markers: { size: 4 },
+            colors: ['#00b894'],
+            legend: { position: 'bottom' } // ⬅️ Tambah ini
+        });
+        registerChart.render();
+
+        // Inisialisasi Chart: Status (Donut)
+        statusChart = new ApexCharts(document.querySelector("#statusChart"), {
+            chart: { type: 'donut', height: 300 },
+            labels: ['Registered', 'Checking', 'Rejected'],
+            series: [],
+            legend: { position: 'bottom' } // ⬅️ Tambah ini
+        });
+        statusChart.render();
+
+        // Inisialisasi Chart: OS (Donut)
+        osChart = new ApexCharts(document.querySelector("#osChart"), {
+            chart: { type: 'donut', height: 300 },
+            labels: ['iOS', 'Android', 'Unknown'],
+            series: [],
+            legend: { position: 'bottom' } // ⬅️ Tambah ini
+        });
+        osChart.render();
+
+        // Memanggil data dashboard dan mengupdate chart
+        fetchDashboardData();
+        loadDepartments();
+
+        // Auto refresh setiap 60 detik
+        setInterval(fetchDashboardData, 60000);
     });
-    registerChart.render();
 
-    // Inisialisasi Chart: Status (Donut)
-    statusChart = new ApexCharts(document.querySelector("#statusChart"), {
-        chart: { type: 'donut', height: 300 },
-        labels: ['Registered', 'Checking', 'Rejected'],
-        series: [],
-        legend: { position: 'bottom' } // ⬅️ Tambah ini
-    });
-    statusChart.render();
+    // Fungsi untuk mengambil data dan memperbarui chart
+    function fetchDashboardData() {
+        const year = selectedYear || new Date().getFullYear();
+        const dept = selectedDepartment || '';
 
-    // Inisialisasi Chart: OS (Donut)
-    osChart = new ApexCharts(document.querySelector("#osChart"), {
-        chart: { type: 'donut', height: 300 },
-        labels: ['iOS', 'Android', 'Unknown'],
-        series: [],
-        legend: { position: 'bottom' } // ⬅️ Tambah ini
-    });
-    osChart.render();
+        $.getJSON(`{{ route("dashboard.data") }}?year=${year}&department=${dept}`, function (data) {
 
-    // Memanggil data dashboard dan mengupdate chart
-    fetchDashboardData();
+            if (!data) {
+                console.error("No data received.");
+                return;
+            }
 
-    // Auto refresh setiap 60 detik
-    setInterval(fetchDashboardData, 60000);
-});
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
 
-// Fungsi untuk mengambil data dan memperbarui chart
-function fetchDashboardData() {
-    $.getJSON('{{ route("dashboard.data") }}', function (data) {
+            // Update Chart: Register
+            if (registerChart) {
+                console.log("Updating register chart with data:", data.monthly);
+                registerChart.updateSeries([{
+                    name: 'New Registered',
+                    data: data.monthly
+                }]);
+                registerChart.updateOptions({
+                    xaxis: { categories: months }
+                });
+            }
 
-        if (!data) {
-            console.error("No data received.");
-            return;
-        }
-
-        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
-
-        // Update Chart: Register
-        if (registerChart) {
-            console.log("Updating register chart with data:", data.monthly);
-            registerChart.updateSeries([{
-                name: 'New Registered',
-                data: data.monthly
-            }]);
-            registerChart.updateOptions({
-                xaxis: { categories: months }
-            });
-        }
-
-        // Update Chart: Status
-        const totalStatus = data.registerStatus.registered + data.registerStatus.checking + data.registerStatus.rejected;
-        if (statusChart) {
-            statusChart.updateSeries(Object.values(data.registerStatus));
-            statusChart.updateOptions({
-                plotOptions: {
-                    pie: {
-                        donut: {
-                            labels: {
-                                total: {
-                                    formatter: () => totalStatus
+            // Update Chart: Status
+            const totalStatus = data.registerStatus.registered + data.registerStatus.checking + data.registerStatus.rejected;
+            if (statusChart) {
+                statusChart.updateSeries(Object.values(data.registerStatus));
+                statusChart.updateOptions({
+                    plotOptions: {
+                        pie: {
+                            donut: {
+                                labels: {
+                                    total: {
+                                        formatter: () => totalStatus
+                                    }
                                 }
                             }
                         }
                     }
-                }
-            });
-        }
+                });
+            }
 
-        // Update Chart: OS
-        const totalOS = data.osDevices.ios + data.osDevices.android + data.osDevices.unknown;
-        if (osChart) {
-            osChart.updateSeries(Object.values(data.osDevices));
-            osChart.updateOptions({
-                plotOptions: {
-                    pie: {
-                        donut: {
-                            labels: {
-                                total: {
-                                    formatter: () => totalOS
+            // Update Chart: OS
+            const totalOS = data.osDevices.ios + data.osDevices.android + data.osDevices.unknown;
+            if (osChart) {
+                osChart.updateSeries(Object.values(data.osDevices));
+                osChart.updateOptions({
+                    plotOptions: {
+                        pie: {
+                            donut: {
+                                labels: {
+                                    total: {
+                                        formatter: () => totalOS
+                                    }
                                 }
                             }
                         }
                     }
-                }
-            });
-        }
+                });
+            }
 
-        // Update DOM info
-        $('#statusRegistered').text(data.registerStatus.registered);
-        $('#statusChecking').text(data.registerStatus.checking);
-        $('#statusRejected').text(data.registerStatus.rejected);
-        $('#osIOS').text(data.osDevices.ios);
-        $('#osAndroid').text(data.osDevices.android);
-        $('#osUnknown').text(data.osDevices.unknown);
-    }).fail(function (xhr, status, error) {
-        console.error("Error fetching dashboard data:", error);
-    });
-}
+            // Update DOM info
+            $('#statusRegistered').text(data.registerStatus.registered);
+            $('#statusChecking').text(data.registerStatus.checking);
+            $('#statusRejected').text(data.registerStatus.rejected);
+            $('#osIOS').text(data.osDevices.ios);
+            $('#osAndroid').text(data.osDevices.android);
+            $('#osUnknown').text(data.osDevices.unknown);
+        }).fail(function (xhr, status, error) {
+            console.error("Error fetching dashboard data:", error);
+        });
+    }
+
+    // Ambil data department dari server
+    function loadDepartments() {
+        $.getJSON('/departments', function (data) {
+            let menu = $('#departmentMenu');
+            menu.empty();
+            menu.append(`<li><a class="dropdown-item department-item" data-value="">All Department</a></li>`);
+
+            data.forEach(function (dept) {
+                menu.append(`<li><a class="dropdown-item department-item" data-value="${dept.department_id}">${dept.department_name}</a></li>`);
+            });
+
+            // Re-attach event listener setelah isi ulang
+            $('.department-item').on('click', function () {
+                selectedDepartment = $(this).data('value');
+                $('#departmentDropdown').text($(this).text());
+                fetchDashboardData();
+            });
+        });
+    }
+
 </script>
 
 

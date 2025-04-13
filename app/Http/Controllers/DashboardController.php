@@ -20,10 +20,24 @@ class DashboardController extends Controller
         return view('staff.register-staff', compact('pengajuan'));
     }
 
-    public function getDashboardData()
+    public function getDashboardData(Request $request)
     {
+        $year = $request->input('year', date('Y')); // default: tahun sekarang
+        $departmentId = $request->input('department'); // bisa null
+
+        // Base query with filters
+        $baseQuery = Pengajuan::with('employee')
+            ->whereYear('created_at', $year);
+
+        if ($departmentId) {
+            $baseQuery->whereHas('employee', function ($q) use ($departmentId) {
+                $q->where('department_id', $departmentId);
+            });
+        }
+
         // Monthly data
-        $monthly = Pengajuan::selectRaw('MONTH(created_at) as month, COUNT(*) as total')
+        $monthly = (clone $baseQuery)
+            ->selectRaw('MONTH(created_at) as month, COUNT(*) as total')
             ->groupByRaw('MONTH(created_at)')
             ->pluck('total', 'month');
 
@@ -34,12 +48,12 @@ class DashboardController extends Controller
 
         // Register Status
         $registerStatus = [
-            'registered' => Pengajuan::where('approve_QHSE', 'approved')->where('approve_HRD', 'approved')->count(),
-            'checking' => Pengajuan::where(function($q){
+            'registered' => (clone $baseQuery)->where('approve_QHSE', 'approved')->where('approve_HRD', 'approved')->count(),
+            'checking' => (clone $baseQuery)->where(function($q){
                 $q->whereNull('approve_QHSE')
                 ->orWhereNull('approve_HRD');
             })->count(),
-            'rejected' => Pengajuan::where(function($q){
+            'rejected' => (clone $baseQuery)->where(function($q){
                 $q->where('approve_QHSE', 'rejected')
                 ->orWhere('approve_HRD', 'rejected');
             })->count(),
@@ -47,9 +61,9 @@ class DashboardController extends Controller
 
         // OS Devices
         $osDevices = [
-            'ios' => Pengajuan::where('os_type', 'Apple')->count(),
-            'android' => Pengajuan::where('os_type', 'Android')->count(),
-            'unknown' => Pengajuan::whereNull('os_type')->orWhere('os_type', 'Unknown')->count(),
+            'ios' => (clone $baseQuery)->where('os_type', 'Apple')->count(),
+            'android' => (clone $baseQuery)->where('os_type', 'Android')->count(),
+            'unknown' => (clone $baseQuery)->whereNull('os_type')->orWhere('os_type', 'Unknown')->count(),
         ];
 
         return response()->json([

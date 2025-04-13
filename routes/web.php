@@ -45,6 +45,9 @@ Route::middleware('auth:employee')->group(function () {
     Route::middleware('jabatan:HRD,QHSE,STAFF')->group(function () {
         Route::post('/pengajuan/store', [PengajuanController::class, 'store'])->name('pengajuan.store');
         Route::get('/pengajuan/{id}', [PengajuanController::class, 'show'])->name('pengajuan.show');
+        Route::get('/departments', function () {
+            return \App\Models\Department::select('department_id', 'department_name')->orderBy('department_name')->get();
+        });
     });
 
     // HRD & QHSE khusus

@@ -5,6 +5,7 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\PengajuanController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\NotifikasiController;
 
 /*
 |--------------------------------------------------------------------------
@@ -43,7 +44,10 @@ Route::middleware('auth:employee')->group(function () {
     
         // Semua user (HRD, QHSE, STAFF) yang bisa akses pengajuan
     Route::middleware('jabatan:HRD,QHSE,STAFF')->group(function () {
+        Route::get('/notifikasi', [NotifikasiController::class, 'index'])->name('notifikasi.index');
+        Route::get('/notifikasi/{id}/read', [NotifikasiController::class, 'markAsRead'])->name('notifikasi.read');
         Route::post('/pengajuan/store', [PengajuanController::class, 'store'])->name('pengajuan.store');
+        Route::get('/pengajuan/data', [PengajuanController::class, 'data'])->name('pengajuan.data');
         Route::get('/pengajuan/{id}', [PengajuanController::class, 'show'])->name('pengajuan.show');
         Route::get('/departments', function () {
             return \App\Models\Department::select('department_id', 'department_name')->orderBy('department_name')->get();

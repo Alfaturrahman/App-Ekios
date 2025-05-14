@@ -97,7 +97,7 @@
         <div class="tab-pane fade" id="registrasi" role="tabpanel" aria-labelledby="registrasi-tab">
             <div class="d-flex justify-content-end align-items-center mb-3">
                 <div id="customSearchWrapper" class="me-3" style="width: 250px;"></div>
-                <button type="button" class="btn" style="background-color: #DCD135; color: black;" data-bs-toggle="modal" data-bs-target="#mmsModal">
+                <button type="button" class="btn" style="background-color: #fdd835; color: black;" data-bs-toggle="modal" data-bs-target="#mmsModal">
                     <i class="fas fa-plus"></i> Daftar MMS
                 </button>
             </div>
@@ -368,29 +368,28 @@
                     </div>
                 </div>
             </div>
-
-            <!-- Modal Reject -->
-            <div class="modal fade" id="rejectModal" tabindex="-1" aria-labelledby="rejectModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-focus="false">
-                <div class="modal-dialog modal-dialog-centered">
-                    <div class="modal-content">
-                        <form id="rejectForm">
-                            <div class="modal-header">
-                                <h5 class="modal-title" id="rejectModalLabel">Reject</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
-                            </div>
-                            <div class="modal-body">
-                                <div class="mb-3">
-                                    <label for="rejectReason" class="form-label">Remark</label>
-                                    <textarea class="form-control" id="rejectReason" name="rejectReason" rows="4" placeholder="Insert Remark" required></textarea>
-                                </div>
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                <button type="submit" class="btn btn-danger">Submit</button>
-                            </div>
-                        </form>
+        </div>
+    </div>
+    <!-- Modal Reject -->
+    <div class="modal fade" id="rejectModal" tabindex="-1" aria-labelledby="rejectModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-focus="false">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <form id="rejectForm">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="rejectModalLabel">Reject</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
                     </div>
-                </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="rejectReason" class="form-label">Remark</label>
+                            <textarea class="form-control" id="rejectReason" name="rejectReason" rows="4" placeholder="Insert Remark" required></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-danger">Submit</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
@@ -411,7 +410,7 @@
         $('#btnReject').on('click', function () {
             $('#rejectModal').modal('show');
         });
-
+        
         $('#rejectForm').on('submit', function (e) {
             e.preventDefault();
 
@@ -444,7 +443,9 @@
                         text: 'Permintaan telah berhasil ditolak.',
                         timer: 2000,
                         showConfirmButton: false
-                    }).then(() => location.reload());
+                    }).then(() => {
+                        reloadTable();
+                    });
 
                     const instance = bootstrap.Offcanvas.getInstance(document.getElementById('detailOffcanvas'));
                     instance.hide();
@@ -498,7 +499,9 @@
                             text: 'Permintaan telah disetujui.',
                             timer: 2000,
                             showConfirmButton: false
-                        }).then(() => setTimeout(() => location.reload(), 500));
+                        }).then(() => {
+                            reloadTable();
+                        });
 
                         const instance = bootstrap.Offcanvas.getInstance(document.getElementById('detailOffcanvas'));
                         instance.hide();
@@ -562,11 +565,19 @@
                 let statusText = data.status;
                 let statusClass = 'bg-secondary';
                 switch (statusText) {
-                    case 'Disetujui': statusClass = 'bg-success'; break;
+                    case 'Disetujui':
+                        statusClass = 'bg-success';
+                        break;
                     case 'Ditolak QHSE':
-                    case 'Ditolak HRD': statusClass = 'bg-danger'; break;
+                    case 'Ditolak HRD':
+                        statusClass = 'bg-danger';
+                        break;
                     case 'Menunggu QHSE':
-                    case 'Menunggu HRD': statusClass = 'bg-warning'; break;
+                        statusClass = 'bg-warning-qhse';  // Kelas khusus untuk Menunggu QHSE
+                        break;
+                    case 'Menunggu HRD':
+                        statusClass = 'bg-warning-hrd';  // Kelas khusus untuk Menunggu HRD
+                        break;
                 }
 
                 $('#detailStatus').text(statusText).removeClass().addClass(`badge ${statusClass}`);
@@ -639,12 +650,20 @@
         $(document).on('click', function (e) {
             const $offcanvas = $('#detailOffcanvas');
             const isOpen = $offcanvas.hasClass('show');
-            const isInside = $(e.target).closest('#detailOffcanvas').length > 0;
+            const $modal = $('#rejectModal');
 
-            if (isOpen && !isInside) {
-                const instance = bootstrap.Offcanvas.getOrCreateInstance($offcanvas[0]);
-                instance.hide();
+            const isModalOpen = $modal.hasClass('show');
+            const isClickInsideOffcanvas = $(e.target).closest('#detailOffcanvas').length > 0;
+            const isClickInsideModal = $(e.target).closest('#rejectModal').length > 0;
+
+            // Hanya tutup offcanvas jika klik DI LUAR SEMUANYA dan modal sedang tidak terbuka
+            if (isOpen && !isClickInsideOffcanvas && !isClickInsideModal && !isModalOpen) {
+                const instance = bootstrap.Offcanvas.getInstance($offcanvas[0]);
+                instance?.hide();
             }
+            $('#rejectModal').on('shown.bs.modal', function () {
+                $('#rejectReason').trigger('focus');
+            });
         });
     });
 
@@ -695,11 +714,51 @@
         // Memanggil data dashboard dan mengupdate chart
         fetchDashboardData();
         loadDepartments();
+        reloadTable()
 
         // Auto refresh setiap 60 detik
         setInterval(fetchDashboardData, 60000);
     });
 
+    function reloadTable() {
+        $.get('{{ route('pengajuan.data') }}', function (data) {
+
+            console.log("tesssss", data);
+            
+            const tbody = $('#hpTable tbody');
+            tbody.empty();
+
+            data.forEach(item => {
+                const badgeClass = {
+                    'Disetujui': 'success',
+                    'Ditolak HRD': 'danger',
+                    'Ditolak QHSE': 'danger',
+                    'Menunggu QHSE': 'warning-qhse', 
+                    'Menunggu HRD': 'warning-hrd', 
+                }[item.status] ?? 'secondary';
+
+                const row = `
+                    <tr>
+                        <td class="text-center">${item.no}</td>
+                        <td>${item.employee_name}</td>
+                        <td>${item.department_name}</td>
+                        <td>${item.brand_type}</td>
+                        <td>${item.nama_hp}</td>
+                        <td>${item.imei1}</td>
+                        <td>${item.submission_type}</td>
+                        <td>${item.created_at}</td>
+                        <td><span class="badge bg-${badgeClass}">${item.status}</span></td>
+                        <td class="text-center">
+                            <button class="btn btn-sm btn-outline-dark btn-detail" data-id="${item.pengajuan_id}" data-bs-toggle="offcanvas" data-bs-target="#detailOffcanvas">
+                                <i class="fas fa-eye text-dark"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+                tbody.append(row);
+            });
+        });
+    }
     // Fungsi untuk mengambil data dan memperbarui chart
     function fetchDashboardData() {
         const year = selectedYear || new Date().getFullYear();
@@ -726,16 +785,26 @@
                 });
             }
 
-            // Update Chart: Status
-            const totalStatus = data.registerStatus.registered + data.registerStatus.checking + data.registerStatus.rejected;
+            // === STATUS CHART ===
+            const statusData = Object.values(data.registerStatus);
+            const totalStatus = statusData.reduce((a, b) => a + b, 0);
+
             if (statusChart) {
-                statusChart.updateSeries(Object.values(data.registerStatus));
+                statusChart.updateSeries(totalStatus > 0 ? statusData : [1]);
                 statusChart.updateOptions({
+                    labels: totalStatus > 0 ? ['Registered', 'Checking', 'Rejected'] : ['Tidak ada data'],
+                    colors: totalStatus > 0 ? undefined : ['#e0e0e0'], // abu-abu kalau kosong
+                    tooltip: {
+                        enabled: totalStatus > 0 // disable kalau data kosong
+                    },
                     plotOptions: {
                         pie: {
                             donut: {
                                 labels: {
+                                    show: true,
                                     total: {
+                                        show: true,
+                                        label: totalStatus > 0 ? 'Total' : 'Tidak Ada Data',
                                         formatter: () => totalStatus
                                     }
                                 }
@@ -745,16 +814,26 @@
                 });
             }
 
-            // Update Chart: OS
-            const totalOS = data.osDevices.ios + data.osDevices.android + data.osDevices.unknown;
+            // === OS CHART ===
+            const osData = Object.values(data.osDevices);
+            const totalOS = osData.reduce((a, b) => a + b, 0);
+
             if (osChart) {
-                osChart.updateSeries(Object.values(data.osDevices));
+                osChart.updateSeries(totalOS > 0 ? osData : [1]);
                 osChart.updateOptions({
+                    labels: totalOS > 0 ? ['iOS', 'Android', 'Unknown'] : ['Tidak ada data'],
+                    colors: totalOS > 0 ? undefined : ['#e0e0e0'],
+                    tooltip: {
+                        enabled: totalOS > 0
+                    },
                     plotOptions: {
                         pie: {
                             donut: {
                                 labels: {
+                                    show: true,
                                     total: {
+                                        show: true,
+                                        label: totalOS > 0 ? 'Total' : 'Tidak Ada Data',
                                         formatter: () => totalOS
                                     }
                                 }
@@ -808,7 +887,7 @@
 
     /* Tab aktif */
     .nav-tabs .nav-link.active {
-        color: #DCD135 !important;
+        color: #fdd835 !important;
         font-weight:600; 
     }
 
@@ -948,6 +1027,15 @@
         background-color: #F6B543;
         z-index: 0;
     }
+
+    .bg-warning-qhse {
+        background-color: #ff9800; /* Warna oranye untuk Menunggu QHSE */
+    }
+
+    .bg-warning-hrd {
+        background-color: #cfbb04; /* Warna kuning untuk Menunggu HRD */
+    }
+
 </style>
 
 

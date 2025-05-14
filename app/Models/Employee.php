@@ -4,11 +4,13 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
 
 class Employee extends Authenticatable // supaya bisa login pakai guard
 {
+    use Notifiable;
+    
     protected $table = 'tbl_employee';
-
     protected $primaryKey = 'employee_badge';
     public $incrementing = false;
     protected $keyType = 'string';

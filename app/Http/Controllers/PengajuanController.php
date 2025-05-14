@@ -7,6 +7,7 @@ use App\Models\Pengajuan;
 use App\Models\Employee;
 use App\Models\PengajuanHistory;
 use Illuminate\Support\Facades\Storage;
+use App\Notifications\PengajuanStatusChanged;
 
 class PengajuanController extends Controller
 {
@@ -36,6 +37,42 @@ class PengajuanController extends Controller
         }
 
         $pengajuan->status = $status;
+
+        return response()->json($pengajuan);
+    }
+
+    public function data()
+    {
+        $pengajuan = Pengajuan::with('employee.department')->latest()->get();
+
+        $pengajuan->transform(function ($item, $index) {
+            // Format status seperti di blade
+            $status = $item->status;
+            if ($item->approve_QHSE === 'pending') {
+                $status = 'Menunggu QHSE';
+            } elseif ($item->approve_QHSE === 'approved' && $item->approve_HRD === 'pending') {
+                $status = 'Menunggu HRD';
+            } elseif ($item->approve_QHSE === 'approved' && $item->approve_HRD === 'approved') {
+                $status = 'Disetujui';
+            } elseif ($item->approve_QHSE === 'rejected') {
+                $status = 'Ditolak QHSE';
+            } elseif ($item->approve_HRD === 'rejected') {
+                $status = 'Ditolak HRD';
+            }
+
+            return [
+                'no' => $index + 1,
+                'pengajuan_id' => $item->pengajuan_id,
+                'employee_name' => $item->employee->employee_name ?? '-',
+                'department_name' => $item->employee->department->department_name ?? '-',
+                'brand_type' => $item->brand_type,
+                'nama_hp' => $item->nama_hp,
+                'imei1' => $item->imei1,
+                'submission_type' => $item->submission_type,
+                'created_at' => $item->created_at->format('d M Y, H:i'),
+                'status' => $status,
+            ];
+        });
 
         return response()->json($pengajuan);
     }
@@ -82,8 +119,15 @@ class PengajuanController extends Controller
             'note' => $request->submission_reason,
             'by_name' => $user->employee_name,
             'user_badge' => $user->employee_badge,
-            'robadge' => strtolower($user->jabatan->name ?? 'employee'),
+            'role' => strtolower($user->jabatan->name ?? 'employee'),
         ]);
+
+        $pengajuan->employee->notify(new PengajuanStatusChanged($pengajuan));
+
+        $qhseUsers = Employee::whereHas('jabatan', fn ($q) => $q->where('name', 'qhse'))->get();
+        foreach ($qhseUsers as $qhse) {
+            $qhse->notify(new PengajuanStatusChanged($pengajuan));
+        }
 
         return response()->json(['status' => 'success']);
     }
@@ -106,6 +150,11 @@ class PengajuanController extends Controller
                 'user_badge' => $user->employee_badge,
                 'role' => $jabatan,
             ]);
+            // Notifikasi ke HRD
+            $hrdUsers = Employee::whereHas('jabatan', fn ($q) => $q->where('name', 'hrd'))->get();
+            foreach ($hrdUsers as $hrd) {
+                $hrd->notify(new PengajuanStatusChanged($pengajuan));
+            }
         } elseif ($jabatan === 'hrd') {
             if ($pengajuan->approve_QHSE !== 'approved') {
                 return response()->json(['message' => 'Belum disetujui oleh QHSE'], 403);
@@ -127,6 +176,7 @@ class PengajuanController extends Controller
         }
 
         $pengajuan->save();
+        $pengajuan->employee->notify(new PengajuanStatusChanged($pengajuan));
 
         return response()->json(['message' => 'Pengajuan disetujui.']);
     }
@@ -153,6 +203,8 @@ class PengajuanController extends Controller
                 'user_badge' => $user->employee_badge,
                 'role' => $jabatan,
             ]);
+            $pengajuan->employee->notify(new PengajuanStatusChanged($pengajuan));
+
         } elseif ($jabatan === 'hrd') {
             $pengajuan->approve_HRD = 'rejected';
             $pengajuan->reason_HRD = $request->reason;
@@ -165,11 +217,13 @@ class PengajuanController extends Controller
                 'user_badge' => $user->employee_badge,
                 'role' => $jabatan,
             ]);
+            $pengajuan->employee->notify(new PengajuanStatusChanged($pengajuan));
         } else {
             return response()->json(['message' => 'Tidak punya akses'], 403);
         }
 
         $pengajuan->save();
+        $pengajuan->employee->notify(new PengajuanStatusChanged($pengajuan));
 
         return response()->json(['message' => 'Pengajuan ditolak.']);
     }

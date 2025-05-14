@@ -14,8 +14,8 @@
         </div>
 
         <!-- Modal -->
-        <div class="modal fade" id="mmsModal" tabindex="-1" aria-labelledby="mmsModalLabel" aria-hidden="true" data-bs-backdrop="false">
-            <div class="modal-dialog modal-dialog-scrollable">
+        <div class="modal fade" id="mmsModal" tabindex="-1" aria-labelledby="mmsModalLabel" aria-hidden="true" data-bs-backdrop="static">
+            <div class="modal-dialog modal-dialog-scrollable" style="min-width: 800px">
             <div class="modal-content">
                 <div class="modal-header">
                 <h5 class="modal-title" id="mmsModalLabel">Register Handphone</h5>
@@ -51,8 +51,7 @@
                     
                         <!-- OS -->
                         <div class="mb-3">
-                            <label class="form-label">OS :</label>
-                            <div class="form-check form-check-inline">
+                            <div class="form-check form-check-inline" style="margin-top: 10px"> 
                                 <input class="form-check-input" type="radio" name="os_type" value="Android" required>
                                 <label class="form-check-label">Android</label>
                             </div>
@@ -75,26 +74,30 @@
                         <!-- Application Type (submission_type) -->
                         <div class="mb-3">
                             <label class="form-label">Application Type</label>
-                            <div class="form-check form-check-inline">
-                                <input class="form-check-input" type="radio" name="submission_type" value="New Employee" required>
-                                <label class="form-check-label">New Employee</label>
-                            </div>
-                            <div class="form-check form-check-inline">
-                                <input class="form-check-input" type="radio" name="submission_type" value="New Mobile Phone Addition" required>
-                                <label class="form-check-label">New Mobile Phone Addition</label>
+                            <div class="column">
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="radio" name="submission_type" value="New Employee" required>
+                                    <label class="form-check-label">New Employee</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="radio" name="submission_type" value="New Mobile Phone Addition" required>
+                                    <label class="form-check-label">New Mobile Phone Addition</label>
+                                </div>
                             </div>
                         </div>
                     
                         <!-- Submission Reason -->
                         <div class="mb-3">
                             <label class="form-label">Submission Reason</label>
-                            <div class="form-check form-check-inline">
-                                <input class="form-check-input" type="radio" name="submission_reason" value="Upload Foto" required>
-                                <label class="form-check-label">Upload Foto</label>
-                            </div>
-                            <div class="form-check form-check-inline">
-                                <input class="form-check-input" type="radio" name="submission_reason" value="Take Photo" required>
-                                <label class="form-check-label">Take Photo</label>
+                            <div class="column">
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="radio" name="submission_reason" value="Upload Foto" required>
+                                    <label class="form-check-label">Upload Foto</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="radio" name="submission_reason" value="Take Photo" required>
+                                    <label class="form-check-label">Take Photo</label>
+                                </div>
                             </div>
                         </div>
                     
@@ -287,10 +290,24 @@
 
 
     $(document).ready(function () {
-            
+
         /** ==================== FORM PENGAJUAN ==================== **/
         $('#mmsForm').on('submit', function (e) {
             e.preventDefault();
+            $('#mmsModal').modal('hide');
+
+            setTimeout(() => {
+                $('.modal-backdrop').remove();
+                $('body').removeClass('modal-open').css('padding-right', '');
+                Swal.fire({
+                    title: 'Mengirim...',
+                    text: 'Mohon tunggu sebentar.',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+            }, 300);
 
             const formData = new FormData(this);
 
@@ -301,16 +318,63 @@
                 processData: false,
                 contentType: false,
                 success: function () {
-                    Swal.fire('Success', 'Pengajuan berhasil dikirim!', 'success');
-                    $('#mmsModal').modal('hide');
+                    Swal.fire('Sukses', 'Pengajuan berhasil dikirim!', 'success');
                     $('#mmsForm')[0].reset();
+                    reloadTable(); // reload setelah submit
                 },
                 error: function (xhr) {
-                    Swal.fire('Error', 'Gagal mengirim pengajuan!', 'error');
+                    let res = xhr.responseJSON;
+                    if (res && res.errors) {
+                        let messages = Object.values(res.errors).flat().join('<br>');
+                        Swal.fire('Gagal', messages, 'error');
+                    } else {
+                        Swal.fire('Error', 'Gagal mengirim pengajuan!', 'error');
+                    }
                     console.error(xhr.responseText);
                 }
             });
         });
+
+        /** ==================== RELOAD TABLE FUNCTION ==================== **/
+        function reloadTable() {
+            $.get('{{ route('pengajuan.data') }}', function (data) {
+
+                console.log("tesssss", data);
+                
+                const tbody = $('#hpTable tbody');
+                tbody.empty();
+
+                data.forEach(item => {
+                    const badgeClass = {
+                        'Disetujui': 'success',
+                        'Ditolak HRD': 'danger',
+                        'Ditolak QHSE': 'danger',
+                        'Menunggu HRD': 'warning',
+                        'Menunggu QHSE': 'warning',
+                    }[item.status] ?? 'secondary';
+
+                    const row = `
+                        <tr>
+                            <td class="text-center">${item.no}</td>
+                            <td>${item.employee_name}</td>
+                            <td>${item.department_name}</td>
+                            <td>${item.brand_type}</td>
+                            <td>${item.nama_hp}</td>
+                            <td>${item.imei1}</td>
+                            <td>${item.submission_type}</td>
+                            <td>${item.created_at}</td>
+                            <td><span class="badge bg-${badgeClass}">${item.status}</span></td>
+                            <td class="text-center">
+                                <button class="btn btn-sm btn-outline-dark btn-detail" data-id="${item.pengajuan_id}" data-bs-toggle="offcanvas" data-bs-target="#detailOffcanvas">
+                                    <i class="fas fa-eye text-dark"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                    tbody.append(row);
+                });
+            });
+        }
 
         /** ==================== DETAIL OFFCANVAS ==================== **/
         $(document).on('click', '.btn-detail', function () {
@@ -329,7 +393,6 @@
                     hour: '2-digit', minute: '2-digit'
                 });
 
-                // Set data
                 $('#detailTitle').text(`${data.brand_type ?? '-'} - ${data.nama_hp ?? '-'}`);
                 $('#detailMeta').text(`by ${emp.employee_name ?? '-'} (${emp.employee_badge ?? '-'}), ${waktu}`);
                 $('#detailSubmissionType').text(data.submission_type ?? '-');
@@ -366,7 +429,7 @@
                 const histories = data.histories || [];
 
                 if (histories.length > 0) {
-                    const timelineItems = histories.map((item, index) => {
+                    const timelineItems = histories.map((item) => {
                         const tanggal = new Date(item.created_at).toLocaleString('id-ID', {
                             weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
                             hour: '2-digit', minute: '2-digit'
@@ -389,7 +452,6 @@
                         `;
                     }).join('');
 
-                    // Bungkus semua item dengan garis vertikal 1x
                     $historyContent.html(`
                         <div class="position-relative">
                             <div class="vertical-line-full"></div>
@@ -399,6 +461,7 @@
                 } else {
                     $historyContent.html('<div class="text-muted">Tidak ada data.</div>');
                 }
+
                 $('#btnApprove, #btnReject').hide();
 
                 if (currentUserRole === 'QHSE' && statusText === 'Menunggu QHSE') {
@@ -409,6 +472,12 @@
                 }
             });
         });
+
+        /** ==================== AUTO-RELOAD TABLE ==================== **/
+        reloadTable(); // reload awal
+
+        // [Optional] Reload setiap 60 detik
+        setInterval(reloadTable, 60000);
 
         /** ==================== CLOSE OFFCANVAS BY CLICK OUTSIDE ==================== **/
         $(document).on('click', function (e) {
@@ -421,7 +490,8 @@
                 instance.hide();
             }
         });
-    });
+});
+
 </script>
 
 <style>

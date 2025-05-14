@@ -81,7 +81,6 @@
                                         <ul class="list-unstyled mb-5">
                                             <li><i class="fab fa-apple text-purple me-1"></i> iOS: <span id="osIOS">0</span></li>
                                             <li><i class="fab fa-android text-success me-1"></i> Android: <span id="osAndroid">0</span></li>
-                                            <li><i class="fas fa-question-circle text-muted me-1"></i> Unknown: <span id="osUnknown">0</span></li>
                                         </ul>
                                     </div>
                                 </div>
@@ -95,12 +94,12 @@
 
         <!-- Tab Registrasi -->
         <div class="tab-pane fade" id="registrasi" role="tabpanel" aria-labelledby="registrasi-tab">
-            <div class="d-flex justify-content-end align-items-center mb-3">
+            {{-- <div class="d-flex justify-content-end align-items-center mb-3">
                 <div id="customSearchWrapper" class="me-3" style="width: 250px;"></div>
                 <button type="button" class="btn" style="background-color: #fdd835; color: black;" data-bs-toggle="modal" data-bs-target="#mmsModal">
                     <i class="fas fa-plus"></i> Daftar MMS
                 </button>
-            </div>
+            </div> --}}
 
             
             <!-- Modal -->
@@ -207,8 +206,33 @@
                 </div>
                 </div>
             </div>
-  
-  
+
+            <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                <div class="d-flex gap-2 flex-wrap">
+                    <!-- Filter Departemen -->
+                    <select id="filterDepartment" class="form-select form-select-sm" style="width: 180px;">
+                        <option value="">Semua Departemen</option>
+                        <!-- Opsi akan di-load dari server -->
+                    </select>
+                    <!-- Filter Status -->
+                    <select id="filterStatus" class="form-select form-select-sm" style="width: 150px;">
+                        <option value="">Semua Status</option>
+                        <option value="Disetujui">Disetujui</option>
+                        <option value="Ditolak HRD">Ditolak HRD</option>
+                        <option value="Ditolak QHSE">Ditolak QHSE</option>
+                        <option value="Menunggu HRD">Menunggu HRD</option>
+                        <option value="Menunggu QHSE">Menunggu QHSE</option>
+                    </select>
+                </div>
+
+                <div class="d-flex gap-2">
+                    <div id="customSearchWrapper" class="me-2" style="width: 250px;"></div>
+                    <button type="button" class="btn" style="background-color: #fdd835; color: black;" data-bs-toggle="modal" data-bs-target="#mmsModal">
+                        <i class="fas fa-plus"></i> Daftar MMS
+                    </button>
+                </div>
+            </div>
+            
             <!-- Table -->
             <div class="card card-table-wrapper mb-4 shadow-sm">
                 <div class="card-body" style="padding: 0px;">
@@ -408,8 +432,20 @@
     $(document).ready(function () {
         /** ==================== MODAL REJECT ==================== **/
         $('#btnReject').on('click', function () {
-            $('#rejectModal').modal('show');
+            // Tutup offcanvas terlebih dahulu
+            let offcanvasEl = document.getElementById('detailOffcanvas');
+            let offcanvas = bootstrap.Offcanvas.getInstance(offcanvasEl);
+            if (offcanvas) {
+                offcanvas.hide();
+            }
+
+            // Tampilkan modal setelah sedikit delay agar transisi offcanvas selesai
+            setTimeout(function () {
+                $('#rejectModal').modal('show');
+                console.log("tessss");
+            }, 300); // Delay 300ms menunggu offcanvas tertutup
         });
+
         
         $('#rejectForm').on('submit', function (e) {
             e.preventDefault();
@@ -573,10 +609,10 @@
                         statusClass = 'bg-danger';
                         break;
                     case 'Menunggu QHSE':
-                        statusClass = 'bg-warning-qhse';  // Kelas khusus untuk Menunggu QHSE
+                        statusClass = 'bg-warning-qhse';
                         break;
                     case 'Menunggu HRD':
-                        statusClass = 'bg-warning-hrd';  // Kelas khusus untuk Menunggu HRD
+                        statusClass = 'bg-warning-hrd';
                         break;
                 }
 
@@ -600,13 +636,47 @@
                 $historyContent.empty();
 
                 const histories = data.histories || [];
+                let timelineItems = '';
 
-                if (histories.length > 0) {
-                    const timelineItems = histories.map((item, index) => {
-                        const tanggal = new Date(item.created_at).toLocaleString('id-ID', {
-                            weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
-                            hour: '2-digit', minute: '2-digit'
-                        });
+                // Tambahkan keterangan "Selesai" di atas jika status sudah disetujui
+                if (data.status === 'Disetujui') {
+                    const now = new Date();
+                    const selesaiTanggal = now.toLocaleString('id-ID', {
+                        weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+                        hour: '2-digit', minute: '2-digit'
+                    });
+
+                    timelineItems += `
+                        <div class="row align-items-center mb-4">
+                            <div class="col-md-3">
+                                <div class="fw-semibold">${selesaiTanggal.split(',')[0]}</div>
+                                <div class="text-muted small">${selesaiTanggal}</div>
+                            </div>
+                            <div class="col-md-1 d-flex flex-column align-items-center position-relative">
+                                <div class="timeline-dot bg-warning"></div>
+                            </div>
+                            <div class="col-md-8">
+                                <div class="fw-semibold text-success">Selesai</div>
+                                <div class="text-muted small">Pengajuan telah disetujui sepenuhnya</div>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                // Tambahkan riwayat approval
+                timelineItems += histories.map((item, index) => {
+                    const tanggal = new Date(item.created_at).toLocaleString('id-ID', {
+                        weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+                        hour: '2-digit', minute: '2-digit'
+                    });
+                    
+                    // Tentukan remark hanya jika status item-nya adalah Ditolak HRD atau Ditolak QHSE
+                        let remark = '';
+                        if (item.status === 'Rejected by HRD' && item.note) {
+                            remark = `<div class="text-muted small mt-2"><strong>Remark HRD:</strong> ${item.note}</div>`;
+                        } else if (item.status === 'Rejected by QHSE' && item.note) {
+                            remark = `<div class="text-muted small mt-2"><strong>Remark QHSE:</strong> ${item.note}</div>`;
+                        }
 
                         return `
                             <div class="row align-items-center mb-4">
@@ -620,12 +690,13 @@
                                 <div class="col-md-8">
                                     <div class="fw-semibold">${item.status}</div>
                                     <div class="text-muted small">${item.by_name ?? '-'} (${item.user_badge ?? '-'})</div>
+                                    ${remark}
                                 </div>
                             </div>
                         `;
                     }).join('');
 
-                    // Bungkus semua item dengan garis vertikal 1x
+                if (histories.length > 0 || data.status === 'Disetujui') {
                     $historyContent.html(`
                         <div class="position-relative">
                             <div class="vertical-line-full"></div>
@@ -635,6 +706,7 @@
                 } else {
                     $historyContent.html('<div class="text-muted">Tidak ada data.</div>');
                 }
+
                 $('#btnApprove, #btnReject').hide();
 
                 if (currentUserRole === 'QHSE' && statusText === 'Menunggu QHSE') {
@@ -645,6 +717,7 @@
                 }
             });
         });
+
 
         /** ==================== CLOSE OFFCANVAS BY CLICK OUTSIDE ==================== **/
         $(document).on('click', function (e) {
@@ -705,7 +778,7 @@
         // Inisialisasi Chart: OS (Donut)
         osChart = new ApexCharts(document.querySelector("#osChart"), {
             chart: { type: 'donut', height: 300 },
-            labels: ['iOS', 'Android', 'Unknown'],
+            labels: ['iOS', 'Android'],
             series: [],
             legend: { position: 'bottom' } // ⬅️ Tambah ini
         });
@@ -717,16 +790,36 @@
         reloadTable()
 
         // Auto refresh setiap 60 detik
-        setInterval(fetchDashboardData, 60000);
+        setInterval(fetchDashboardData, 5000);
+    });
+
+    $(document).ready(function () {
+        // Inisialisasi DataTable sekali di awal
+        $('#hpTable').DataTable();
+
+        // Filter berdasarkan department
+        $('#filterDepartment').on('change', function () {
+            let val = $(this).val();
+            $('#hpTable').DataTable().column(2).search(val).draw(); // Kolom 2 = Departemen
+        });
+
+        // Filter berdasarkan status
+        $('#filterStatus').on('change', function () {
+            let val = $(this).val();
+            $('#hpTable').DataTable().column(8).search(val).draw(); // Kolom 8 = Status
+        });
+
+        // Load data pertama kali
+        reloadTable();
     });
 
     function reloadTable() {
         $.get('{{ route('pengajuan.data') }}', function (data) {
-
             console.log("tesssss", data);
-            
-            const tbody = $('#hpTable tbody');
-            tbody.empty();
+
+            // Kosongkan dan isi ulang DataTable
+            var table = $('#hpTable').DataTable();
+            table.clear();
 
             data.forEach(item => {
                 const badgeClass = {
@@ -737,28 +830,51 @@
                     'Menunggu HRD': 'warning-hrd', 
                 }[item.status] ?? 'secondary';
 
-                const row = `
-                    <tr>
-                        <td class="text-center">${item.no}</td>
-                        <td>${item.employee_name}</td>
-                        <td>${item.department_name}</td>
-                        <td>${item.brand_type}</td>
-                        <td>${item.nama_hp}</td>
-                        <td>${item.imei1}</td>
-                        <td>${item.submission_type}</td>
-                        <td>${item.created_at}</td>
-                        <td><span class="badge bg-${badgeClass}">${item.status}</span></td>
-                        <td class="text-center">
-                            <button class="btn btn-sm btn-outline-dark btn-detail" data-id="${item.pengajuan_id}" data-bs-toggle="offcanvas" data-bs-target="#detailOffcanvas">
-                                <i class="fas fa-eye text-dark"></i>
-                            </button>
-                        </td>
-                    </tr>
-                `;
-                tbody.append(row);
+                table.row.add([
+                    `<div class="text-center">${item.no}</div>`,
+                    item.employee_name,
+                    item.department_name,
+                    item.brand_type,
+                    item.nama_hp,
+                    item.imei1,
+                    item.submission_type,
+                    toWIB(item.created_at),
+                    `<span class="badge bg-${badgeClass}">${item.status}</span>`,
+                    `<div class="text-center">
+                        <button class="btn btn-sm btn-outline-dark btn-detail" data-id="${item.pengajuan_id}" data-bs-toggle="offcanvas" data-bs-target="#detailOffcanvas">
+                            <i class="fas fa-eye text-dark"></i>
+                        </button>
+                    </div>`
+                ]);
             });
+
+            table.draw();
         });
     }
+
+    function toWIB(utcDateTimeString) {
+        const utcDate = new Date(utcDateTimeString); // langsung menggunakan string tanggal UTC tanpa perlu menambah ' UTC'
+        
+        // Cek apakah waktu UTC yang diberikan sudah benar, jika tidak berikan penyesuaian
+        if (isNaN(utcDate)) {
+            console.error('Invalid UTC date format');
+            return null;
+        }
+
+        // Tambahkan 7 jam untuk mengonversi ke WIB
+        const wibDate = new Date(utcDate.getTime() + (7 * 60 * 60 * 1000));
+
+        // Mengembalikan waktu dalam format lokal Indonesia
+        return wibDate.toLocaleString('id-ID', {
+            day: '2-digit',
+            month: 'short',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false,
+        });
+    }
+
     // Fungsi untuk mengambil data dan memperbarui chart
     function fetchDashboardData() {
         const year = selectedYear || new Date().getFullYear();
@@ -821,7 +937,7 @@
             if (osChart) {
                 osChart.updateSeries(totalOS > 0 ? osData : [1]);
                 osChart.updateOptions({
-                    labels: totalOS > 0 ? ['iOS', 'Android', 'Unknown'] : ['Tidak ada data'],
+                    labels: totalOS > 0 ? ['iOS', 'Android'] : ['Tidak ada data'],
                     colors: totalOS > 0 ? undefined : ['#e0e0e0'],
                     tooltip: {
                         enabled: totalOS > 0
@@ -849,7 +965,6 @@
             $('#statusRejected').text(data.registerStatus.rejected);
             $('#osIOS').text(data.osDevices.ios);
             $('#osAndroid').text(data.osDevices.android);
-            $('#osUnknown').text(data.osDevices.unknown);
         }).fail(function (xhr, status, error) {
             console.error("Error fetching dashboard data:", error);
         });
@@ -859,10 +974,17 @@
     function loadDepartments() {
         $.getJSON('/departments', function (data) {
             let menu = $('#departmentMenu');
+            let departmentSelect = $('#filterDepartment');
+
+            departmentSelect.empty();
+            departmentSelect.append('<option value="">Semua Departemen</option>');
+
+
             menu.empty();
             menu.append(`<li><a class="dropdown-item department-item" data-value="">All Department</a></li>`);
 
             data.forEach(function (dept) {
+                departmentSelect.append(`<option value="${dept.department_name}">${dept.department_name}</option>`);
                 menu.append(`<li><a class="dropdown-item department-item" data-value="${dept.department_id}">${dept.department_name}</a></li>`);
             });
 
@@ -872,11 +994,38 @@
                 $('#departmentDropdown').text($(this).text());
                 fetchDashboardData();
             });
+            // Event listener untuk select element
+            departmentSelect.on('change', function () {
+                let selectedDepartment = $(this).val();
+                $('#departmentDropdown').text(selectedDepartment || "All Department");
+                // Panggil fungsi reload tabel berdasarkan filter
+                reloadTable(selectedDepartment, $('#filterStatus').val());
+            });
         });
     }
 
+    </script>
+
+
 </script>
 
+<script>
+    const notifItems = document.querySelectorAll('.notif-item');
+
+    notifItems.forEach(item => {
+        item.addEventListener('click', function (e) {
+            e.preventDefault();
+
+            const pengajuanId = this.dataset.id;
+
+            // Trigger tombol detail
+            const btnDetail = document.querySelector(`.btn-detail[data-id="${pengajuanId}"]`);
+            if (btnDetail) {
+                btnDetail.click(); // Memicu klik tombol detail
+            }
+        });
+    });
+</script>
 
 
 <style>

@@ -49,9 +49,12 @@ class DashboardController extends Controller
         // Register Status
         $registerStatus = [
             'registered' => (clone $baseQuery)->where('approve_QHSE', 'approved')->where('approve_HRD', 'approved')->count(),
-            'checking' => (clone $baseQuery)->where(function($q){
+            'checking' => (clone $baseQuery)
+            ->where(function($q){
                 $q->whereNull('approve_QHSE')
-                ->orWhereNull('approve_HRD');
+                ->orWhere('approve_QHSE', 'pending')
+                ->orWhereNull('approve_HRD')
+                ->orWhere('approve_HRD', 'pending');
             })->count(),
             'rejected' => (clone $baseQuery)->where(function($q){
                 $q->where('approve_QHSE', 'rejected')
@@ -63,7 +66,6 @@ class DashboardController extends Controller
         $osDevices = [
             'ios' => (clone $baseQuery)->where('os_type', 'Apple')->count(),
             'android' => (clone $baseQuery)->where('os_type', 'Android')->count(),
-            'unknown' => (clone $baseQuery)->whereNull('os_type')->orWhere('os_type', 'Unknown')->count(),
         ];
 
         return response()->json([

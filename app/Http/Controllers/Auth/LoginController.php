@@ -45,7 +45,14 @@ class LoginController extends Controller
         Auth::guard('employee')->logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
-        return redirect('/login');
+
+        // Tambahkan pengaturan header cache
+        return redirect('/login')->withHeaders([
+            'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
+            'Pragma' => 'no-cache',
+            'Expires' => 'Sat, 26 Jul 1997 05:00:00 GMT'
+        ]);
     }
+
 }
 

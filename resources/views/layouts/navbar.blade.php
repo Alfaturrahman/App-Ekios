@@ -59,7 +59,12 @@
                             @if(isset($notifikasiList) && count($notifikasiList) > 0)
                                 @foreach($notifikasiList as $notif)
                                 <li>
-                                    <a class="dropdown-item small py-2 px-3 border-bottom @if(!$notif->read_at) unread @else read @endif" href="{{ route('notifikasi.read', $notif->id) }}">
+                                    <a href="#" 
+                                        class="dropdown-item small py-2 px-3 border-bottom notif-item 
+                                        @if(!$notif->read_at) unread @else read @endif"
+                                        data-id="{{ $notif->data['pengajuan_id'] }}"
+                                        data-notif-id="{{ $notif->id }}">
+
                                         <div class="fw-bold">{{ $notif->data['title'] ?? 'Notifikasi' }}</div>
                                         <div class="text-muted">{{ $notif->data['message'] ?? '' }}</div>
 

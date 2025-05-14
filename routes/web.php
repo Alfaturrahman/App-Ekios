@@ -48,6 +48,7 @@ Route::middleware('auth:employee')->group(function () {
         Route::get('/notifikasi/{id}/read', [NotifikasiController::class, 'markAsRead'])->name('notifikasi.read');
         Route::post('/pengajuan/store', [PengajuanController::class, 'store'])->name('pengajuan.store');
         Route::get('/pengajuan/data', [PengajuanController::class, 'data'])->name('pengajuan.data');
+        Route::get('/pengajuan/data/employee', [PengajuanController::class, 'dataByEmployee'])->name('pengajuan.data.employee');
         Route::get('/pengajuan/{id}', [PengajuanController::class, 'show'])->name('pengajuan.show');
         Route::get('/departments', function () {
             return \App\Models\Department::select('department_id', 'department_name')->orderBy('department_name')->get();

@@ -8,6 +8,7 @@ use App\Models\Employee;
 use App\Models\PengajuanHistory;
 use Illuminate\Support\Facades\Storage;
 use App\Notifications\PengajuanStatusChanged;
+use Illuminate\Support\Facades\Auth;
 
 class PengajuanController extends Controller
 {
@@ -43,7 +44,59 @@ class PengajuanController extends Controller
 
     public function data()
     {
+        $user = auth('employee')->user();
+        $jabatan = strtolower($user->jabatan->name ?? '');
+
         $pengajuan = Pengajuan::with('employee.department')->latest()->get();
+
+        // Filter jika user HRD: jangan tampilkan yang approve_QHSE masih pending
+        if ($jabatan === 'hrd') {
+            $pengajuan = $pengajuan->filter(function ($item) {
+                return $item->approve_QHSE !== 'pending';
+            })->values(); // Reset index
+        }
+
+        $pengajuan->transform(function ($item, $index) {
+            // Format status seperti di blade
+            $status = $item->status;
+            if ($item->approve_QHSE === 'pending') {
+                $status = 'Menunggu QHSE';
+            } elseif ($item->approve_QHSE === 'approved' && $item->approve_HRD === 'pending') {
+                $status = 'Menunggu HRD';
+            } elseif ($item->approve_QHSE === 'approved' && $item->approve_HRD === 'approved') {
+                $status = 'Disetujui';
+            } elseif ($item->approve_QHSE === 'rejected') {
+                $status = 'Ditolak QHSE';
+            } elseif ($item->approve_HRD === 'rejected') {
+                $status = 'Ditolak HRD';
+            }
+
+            return [
+                'no' => $index + 1,
+                'pengajuan_id' => $item->pengajuan_id,
+                'employee_name' => $item->employee->employee_name ?? '-',
+                'department_name' => $item->employee->department->department_name ?? '-',
+                'brand_type' => $item->brand_type,
+                'nama_hp' => $item->nama_hp,
+                'imei1' => $item->imei1,
+                'submission_type' => $item->submission_type,
+                'created_at' => $item->created_at->format('d M Y, H:i'),
+                'status' => $status,
+            ];
+        });
+
+        return response()->json($pengajuan);
+    }
+
+
+    public function dataByEmployee()
+    {
+        $employeeId = Auth::user()->employee_id; // Pastikan field ini sesuai dengan modelmu
+
+        $pengajuan = Pengajuan::with('employee.department')
+            ->where('employee_id', $employeeId)
+            ->latest()
+            ->get();
 
         $pengajuan->transform(function ($item, $index) {
             // Format status seperti di blade

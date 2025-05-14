@@ -337,7 +337,7 @@
 
         /** ==================== RELOAD TABLE FUNCTION ==================== **/
         function reloadTable() {
-            $.get('{{ route('pengajuan.data') }}', function (data) {
+            $.get('{{ route('pengajuan.data.employee') }}', function (data) {
 
                 console.log("tesssss", data);
                 
@@ -362,7 +362,7 @@
                             <td>${item.nama_hp}</td>
                             <td>${item.imei1}</td>
                             <td>${item.submission_type}</td>
-                            <td>${item.created_at}</td>
+                            <td>${toWIB(item.created_at)}</td>
                             <td><span class="badge bg-${badgeClass}">${item.status}</span></td>
                             <td class="text-center">
                                 <button class="btn btn-sm btn-outline-dark btn-detail" data-id="${item.pengajuan_id}" data-bs-toggle="offcanvas" data-bs-target="#detailOffcanvas">
@@ -373,6 +373,29 @@
                     `;
                     tbody.append(row);
                 });
+            });
+        }
+
+        function toWIB(utcDateTimeString) {
+            const utcDate = new Date(utcDateTimeString); // langsung menggunakan string tanggal UTC tanpa perlu menambah ' UTC'
+            
+            // Cek apakah waktu UTC yang diberikan sudah benar, jika tidak berikan penyesuaian
+            if (isNaN(utcDate)) {
+                console.error('Invalid UTC date format');
+                return null;
+            }
+
+            // Tambahkan 7 jam untuk mengonversi ke WIB
+            const wibDate = new Date(utcDate.getTime() + (7 * 60 * 60 * 1000));
+
+            // Mengembalikan waktu dalam format lokal Indonesia
+            return wibDate.toLocaleString('id-ID', {
+                day: '2-digit',
+                month: 'short',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: false,
             });
         }
 

@@ -377,9 +377,8 @@
         }
 
         function toWIB(utcDateTimeString) {
-            const utcDate = new Date(utcDateTimeString); // langsung menggunakan string tanggal UTC tanpa perlu menambah ' UTC'
+            const utcDate = new Date(utcDateTimeString); 
             
-            // Cek apakah waktu UTC yang diberikan sudah benar, jika tidak berikan penyesuaian
             if (isNaN(utcDate)) {
                 console.error('Invalid UTC date format');
                 return null;

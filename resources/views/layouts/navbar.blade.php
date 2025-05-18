@@ -117,32 +117,27 @@
     <!-- Custom Scripts -->
     @stack('scripts')
     <style>
-        /* Membatasi lebar dropdown */
         .dropdown-menu {
-            max-width: 400px; /* Menyesuaikan dengan ukuran layar */
+            max-width: 400px; 
             width: auto;
-            word-wrap: break-word; /* Memastikan teks panjang dibungkus */
+            word-wrap: break-word; 
         }
 
-        /* Memastikan item di dalam dropdown memiliki tinggi dan lebar yang sesuai */
         .dropdown-item {
-            white-space: normal; /* Mengizinkan teks untuk dibungkus */
+            white-space: normal; 
         }
 
-        /* Menyesuaikan ukuran dropdown di tampilan mobile */
         @media (max-width: 768px) {
             .dropdown-menu {
-                width: 100%; /* Menggunakan lebar penuh di perangkat kecil */
+                width: 100%; 
             }
         }
 
-        /* Notifikasi yang belum dibaca */
         .unread {
             font-weight: bold;
             background-color: #f7f7f7;
         }
 
-        /* Notifikasi yang sudah dibaca */
         .read {
             font-weight: normal;
             background-color: #fff;

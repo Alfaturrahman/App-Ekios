@@ -853,18 +853,15 @@
     }
 
     function toWIB(utcDateTimeString) {
-        const utcDate = new Date(utcDateTimeString); // langsung menggunakan string tanggal UTC tanpa perlu menambah ' UTC'
+        const utcDate = new Date(utcDateTimeString); 
         
-        // Cek apakah waktu UTC yang diberikan sudah benar, jika tidak berikan penyesuaian
         if (isNaN(utcDate)) {
             console.error('Invalid UTC date format');
             return null;
         }
 
-        // Tambahkan 7 jam untuk mengonversi ke WIB
         const wibDate = new Date(utcDate.getTime() + (7 * 60 * 60 * 1000));
 
-        // Mengembalikan waktu dalam format lokal Indonesia
         return wibDate.toLocaleString('id-ID', {
             day: '2-digit',
             month: 'short',
@@ -875,7 +872,6 @@
         });
     }
 
-    // Fungsi untuk mengambil data dan memperbarui chart
     function fetchDashboardData() {
         const year = selectedYear || new Date().getFullYear();
         const dept = selectedDepartment || '';
@@ -1029,12 +1025,10 @@
 
 
 <style>
-    /* Sembunyikan filter default DataTables */
     #hpTable_filter {
         display: none;
     }
 
-    /* Tab aktif */
     .nav-tabs .nav-link.active {
         color: #fdd835 !important;
         font-weight:600; 
@@ -1045,7 +1039,6 @@
         font-weight: 400;
     }
 
-    /* Table container (jika pakai card wrapper) */
     .card-table-wrapper {
         border-radius: 8px;
         box-shadow: 0 4px 10px rgba(0,0,0,0.05);
@@ -1053,7 +1046,6 @@
         background-color: #fff;
     }
 
-    /* Tabel style */
     #hpTable {
         width: 100%;
         border-collapse: collapse;
@@ -1064,7 +1056,6 @@
         overflow: hidden;
     }
 
-    /* Header */
     #hpTable thead {
         background-color: #f8f9fa;
         font-weight: 600;
@@ -1079,7 +1070,6 @@
         padding: 6px 8px;
     }
 
-    /* Row lines */
     #hpTable tbody tr {
         border-bottom: 1px solid #e4e6e8;
         transition: background-color 0.2s ease;
@@ -1089,7 +1079,6 @@
         background-color: #f5f5f5;
     }
 
-    /* Badge styling */
     .badge {
         font-size: 13px;
         padding: 4px 10px;
@@ -1122,7 +1111,6 @@
         color: white;
     }
 
-    /* Detail icon (mata) */
     .btn-link {
         color: #adb5bd;
         transition: color 0.2s ease;
@@ -1133,12 +1121,10 @@
         text-decoration: none;
     }
 
-    /* Center alignment (untuk kolom tertentu) */
     .text-center {
         text-align: center !important;
     }
 
-    /* Responsive */
     @media (max-width: 768px) {
         #hpTable th, #hpTable td {
             padding: 10px;

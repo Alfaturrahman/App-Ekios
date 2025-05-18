@@ -103,7 +103,7 @@
 
             
             <!-- Modal -->
-            <div class="modal fade" id="mmsModal" tabindex="-1" aria-labelledby="mmsModalLabel" aria-hidden="true" data-bs-backdrop="false">
+            <div class="modal fade" id="mmsModal" tabindex="-1" aria-labelledby="mmsModalLabel" aria-hidden="true" >
                 <div class="modal-dialog modal-dialog-scrollable">
                 <div class="modal-content">
                     <div class="modal-header">
@@ -118,7 +118,7 @@
                         
                             <div class="mb-3">
                                 <label class="form-label">Name</label>
-                                <input type="text" class="form-control" value="{{ auth('employee')->user()->employee_name }}" disabled>
+                                <input type="text" class="form-control" name="employee_name" placeholder="Masukkan nama karyawan" required>
                             </div>
                         
                             <!-- Merk HP (brand_type) -->
@@ -163,18 +163,22 @@
                         
                             <!-- Application Type (submission_type) -->
                             <div class="mb-3">
+                                <div class="row">
                                 <label class="form-label">Application Type</label>
-                                <div class="form-check form-check-inline">
-                                    <input class="form-check-input" type="radio" name="submission_type" value="New Employee" required>
-                                    <label class="form-check-label">New Employee</label>
-                                </div>
-                                <div class="form-check form-check-inline">
-                                    <input class="form-check-input" type="radio" name="submission_type" value="New Mobile Phone Addition" required>
-                                    <label class="form-check-label">New Mobile Phone Addition</label>
+                                    <div class="column">
+                                        <div class="form-check form-check-inline">
+                                            <input class="form-check-input" type="radio" name="submission_type" value="New Employee" required>
+                                            <label class="form-check-label">New Employee</label>
+                                        </div>
+                                        <div class="form-check form-check-inline">
+                                            <input class="form-check-input" type="radio" name="submission_type" value="New Mobile Phone Addition" required>
+                                            <label class="form-check-label">New Mobile Phone Addition</label>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         
-                            <!-- Submission Reason -->
+                            {{-- <!-- Submission Reason -->
                             <div class="mb-3">
                                 <label class="form-label">Submission Reason</label>
                                 <div class="form-check form-check-inline">
@@ -185,7 +189,7 @@
                                     <input class="form-check-input" type="radio" name="submission_reason" value="Take Photo" required>
                                     <label class="form-check-label">Take Photo</label>
                                 </div>
-                            </div>
+                            </div> --}}
                         
                             <!-- Upload -->
                             <div class="mb-3">
@@ -325,36 +329,31 @@
                     <div class="tab-content">
                         <!-- Tab Info -->
                         <div class="tab-pane fade show active" id="infoTabCanvas">
-                            <!-- Accordion -->
-                            <div class="accordion mb-4" id="accordionInfoCanvas">
-                                <div class="accordion-item border">
-                                    <h2 class="accordion-header" id="headingOneCanvas">
-                                        <button class="accordion-button collapsed fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOneCanvas">
-                                            Employee Information
-                                        </button>
-                                    </h2>
-                                    <div id="collapseOneCanvas" class="accordion-collapse collapse" data-bs-parent="#accordionInfoCanvas">
-                                        <div class="accordion-body">
-                                            <div class="row mb-2">
-                                                <div class="col-md-4"><strong>Employee Name</strong></div>
-                                                <div class="col-md-8" id="detailEmployeeName">-</div>
-                                            </div>
-                                            <div class="row mb-2">
-                                                <div class="col-md-4"><strong>Department</strong></div>
-                                                <div class="col-md-8" id="detailDepartment">-</div>
-                                            </div>
-                                            <div class="row mb-2">
-                                                <div class="col-md-4"><strong>Jabatan</strong></div>
-                                                <div class="col-md-8" id="detailEmail">-</div>
-                                            </div>
-                                            <div class="row mb-2">
-                                                <div class="col-md-4"><strong>Phone Number</strong></div>
-                                                <div class="col-md-8" id="detailPhone">-</div>
-                                            </div>
-                                        </div>
+                            <!-- Employee Information Section (Tanpa Accordion) -->
+                            <div class="card mb-4 border">
+                                <div class="card-header fw-semibold">
+                                    Employee Information
+                                </div>
+                                <div class="card-body">
+                                    <div class="row mb-2">
+                                        <div class="col-md-4"><strong>Employee Name</strong></div>
+                                        <div class="col-md-8" id="detailEmployeeName">-</div>
+                                    </div>
+                                    <div class="row mb-2">
+                                        <div class="col-md-4"><strong>Department</strong></div>
+                                        <div class="col-md-8" id="detailDepartment">-</div>
+                                    </div>
+                                    <div class="row mb-2">
+                                        <div class="col-md-4"><strong>Jabatan</strong></div>
+                                        <div class="col-md-8" id="detailEmail">-</div>
+                                    </div>
+                                    <div class="row mb-2">
+                                        <div class="col-md-4"><strong>Phone Number</strong></div>
+                                        <div class="col-md-8" id="detailPhone">-</div>
                                     </div>
                                 </div>
                             </div>
+
             
                             <!-- Device Info -->
                             <h6 class="fw-bold mb-3">Device Information</h6>
@@ -423,6 +422,16 @@
 @push('scripts')
 <script>
     const currentUserRole = "{{ auth('employee')->user()->jabatan->name ?? '-' }}";
+
+    document.addEventListener("DOMContentLoaded", function () {
+        if (currentUserRole === "HRD") {
+            const filterStatus = document.getElementById("filterStatus");
+            const qhseOption = filterStatus.querySelector('option[value="Menunggu QHSE"]');
+            if (qhseOption) {
+                qhseOption.remove();
+            }
+        }
+    });
 
     let registerChart, statusChart, osChart;
     let selectedYear = new Date().getFullYear(); // default: tahun sekarang
@@ -567,6 +576,7 @@
                 success: function () {
                     Swal.fire('Success', 'Pengajuan berhasil dikirim!', 'success');
                     $('#mmsModal').modal('hide');
+                    $('.modal-backdrop').remove();
                     $('#mmsForm')[0].reset();
                 },
                 error: function (xhr) {

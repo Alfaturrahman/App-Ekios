@@ -139,7 +139,6 @@ class PengajuanController extends Controller
             'imei1' => 'required|string',
             'imei2' => 'required|string',
             'submission_type' => 'required|string',
-            'submission_reason' => 'required|string',
             'foto_depan' => 'required|image|mimes:jpeg,jpg,png',
             'foto_belakang' => 'required|image|mimes:jpeg,jpg,png',
         ]);
@@ -157,7 +156,7 @@ class PengajuanController extends Controller
             'os_type' => $request->os_type,
             'imei1' => $request->imei1,
             'imei2' => $request->imei2,
-            'submission_type' => $request->submission_type,
+            'submission_type' => 'Upload Foto',
             'approve_HRD' => 'pending',
             'approve_QHSE' => 'pending',
             'reason_HRD' => null,

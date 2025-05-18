@@ -8,7 +8,7 @@
         <h1 class="mb-4">Registrasi HP</h1>
         <div class="d-flex justify-content-end align-items-center mb-3">
             <div id="customSearchWrapper" class="me-3" style="width: 250px;"></div>
-            <button type="button" class="btn" style="background-color: #DCD135; color: black;" data-bs-toggle="modal" data-bs-target="#mmsModal">
+            <button type="button" class="btn" style="background-color: #fdd835; color: black;" data-bs-toggle="modal" data-bs-target="#mmsModal">
                 <i class="fas fa-plus"></i> Daftar MMS
             </button>
         </div>
@@ -86,7 +86,7 @@
                             </div>
                         </div>
                     
-                        <!-- Submission Reason -->
+                        {{-- <!-- Submission Reason -->
                         <div class="mb-3">
                             <label class="form-label">Submission Reason</label>
                             <div class="column">
@@ -99,7 +99,7 @@
                                     <label class="form-check-label">Take Photo</label>
                                 </div>
                             </div>
-                        </div>
+                        </div> --}}
                     
                         <!-- Upload -->
                         <div class="mb-3">
@@ -213,37 +213,31 @@
                 <div class="tab-content">
                     <!-- Tab Info -->
                     <div class="tab-pane fade show active" id="infoTabCanvas">
-                        <!-- Accordion -->
-                        <div class="accordion mb-4" id="accordionInfoCanvas">
-                            <div class="accordion-item border">
-                                <h2 class="accordion-header" id="headingOneCanvas">
-                                    <button class="accordion-button collapsed fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOneCanvas">
-                                        Employee Information
-                                    </button>
-                                </h2>
-                                <div id="collapseOneCanvas" class="accordion-collapse collapse" data-bs-parent="#accordionInfoCanvas">
-                                    <div class="accordion-body">
-                                        <div class="row mb-2">
-                                            <div class="col-md-4"><strong>Employee Name</strong></div>
-                                            <div class="col-md-8" id="detailEmployeeName">-</div>
-                                        </div>
-                                        <div class="row mb-2">
-                                            <div class="col-md-4"><strong>Department</strong></div>
-                                            <div class="col-md-8" id="detailDepartment">-</div>
-                                        </div>
-                                        <div class="row mb-2">
-                                            <div class="col-md-4"><strong>Jabatan</strong></div>
-                                            <div class="col-md-8" id="detailEmail">-</div>
-                                        </div>
-                                        <div class="row mb-2">
-                                            <div class="col-md-4"><strong>Phone Number</strong></div>
-                                            <div class="col-md-8" id="detailPhone">-</div>
-                                        </div>
-                                    </div>
+                        <!-- Employee Information Section (Tanpa Accordion) -->
+                        <div class="card mb-4 border">
+                            <div class="card-header fw-semibold">
+                                Employee Information
+                            </div>
+                            <div class="card-body">
+                                <div class="row mb-2">
+                                    <div class="col-md-4"><strong>Employee Name</strong></div>
+                                    <div class="col-md-8" id="detailEmployeeName">-</div>
+                                </div>
+                                <div class="row mb-2">
+                                    <div class="col-md-4"><strong>Department</strong></div>
+                                    <div class="col-md-8" id="detailDepartment">-</div>
+                                </div>
+                                <div class="row mb-2">
+                                    <div class="col-md-4"><strong>Jabatan</strong></div>
+                                    <div class="col-md-8" id="detailEmail">-</div>
+                                </div>
+                                <div class="row mb-2">
+                                    <div class="col-md-4"><strong>Phone Number</strong></div>
+                                    <div class="col-md-8" id="detailPhone">-</div>
                                 </div>
                             </div>
                         </div>
-        
+
                         <!-- Device Info -->
                         <h6 class="fw-bold mb-3">Device Information</h6>
                         <p><strong>HP:</strong> <span id="detailBrand">-</span></p>
@@ -349,8 +343,8 @@
                         'Disetujui': 'success',
                         'Ditolak HRD': 'danger',
                         'Ditolak QHSE': 'danger',
-                        'Menunggu HRD': 'warning',
-                        'Menunggu QHSE': 'warning',
+                        'Menunggu QHSE': 'warning-qhse', 
+                        'Menunggu HRD': 'warning-hrd', 
                     }[item.status] ?? 'secondary';
 
                     const row = `
@@ -415,6 +409,7 @@
                     hour: '2-digit', minute: '2-digit'
                 });
 
+                // Set data
                 $('#detailTitle').text(`${data.brand_type ?? '-'} - ${data.nama_hp ?? '-'}`);
                 $('#detailMeta').text(`by ${emp.employee_name ?? '-'} (${emp.employee_badge ?? '-'}), ${waktu}`);
                 $('#detailSubmissionType').text(data.submission_type ?? '-');
@@ -422,11 +417,19 @@
                 let statusText = data.status;
                 let statusClass = 'bg-secondary';
                 switch (statusText) {
-                    case 'Disetujui': statusClass = 'bg-success'; break;
+                    case 'Disetujui':
+                        statusClass = 'bg-success';
+                        break;
                     case 'Ditolak QHSE':
-                    case 'Ditolak HRD': statusClass = 'bg-danger'; break;
+                    case 'Ditolak HRD':
+                        statusClass = 'bg-danger';
+                        break;
                     case 'Menunggu QHSE':
-                    case 'Menunggu HRD': statusClass = 'bg-warning'; break;
+                        statusClass = 'bg-warning-qhse';
+                        break;
+                    case 'Menunggu HRD':
+                        statusClass = 'bg-warning-hrd';
+                        break;
                 }
 
                 $('#detailStatus').text(statusText).removeClass().addClass(`badge ${statusClass}`);
@@ -449,13 +452,47 @@
                 $historyContent.empty();
 
                 const histories = data.histories || [];
+                let timelineItems = '';
 
-                if (histories.length > 0) {
-                    const timelineItems = histories.map((item) => {
-                        const tanggal = new Date(item.created_at).toLocaleString('id-ID', {
-                            weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
-                            hour: '2-digit', minute: '2-digit'
-                        });
+                // Tambahkan keterangan "Selesai" di atas jika status sudah disetujui
+                if (data.status === 'Disetujui') {
+                    const now = new Date();
+                    const selesaiTanggal = now.toLocaleString('id-ID', {
+                        weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+                        hour: '2-digit', minute: '2-digit'
+                    });
+
+                    timelineItems += `
+                        <div class="row align-items-center mb-4">
+                            <div class="col-md-3">
+                                <div class="fw-semibold">${selesaiTanggal.split(',')[0]}</div>
+                                <div class="text-muted small">${selesaiTanggal}</div>
+                            </div>
+                            <div class="col-md-1 d-flex flex-column align-items-center position-relative">
+                                <div class="timeline-dot bg-warning"></div>
+                            </div>
+                            <div class="col-md-8">
+                                <div class="fw-semibold text-success">Selesai</div>
+                                <div class="text-muted small">Pengajuan telah disetujui sepenuhnya</div>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                // Tambahkan riwayat approval
+                timelineItems += histories.map((item, index) => {
+                    const tanggal = new Date(item.created_at).toLocaleString('id-ID', {
+                        weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+                        hour: '2-digit', minute: '2-digit'
+                    });
+                    
+                    // Tentukan remark hanya jika status item-nya adalah Ditolak HRD atau Ditolak QHSE
+                        let remark = '';
+                        if (item.status === 'Rejected by HRD' && item.note) {
+                            remark = `<div class="text-muted small mt-2"><strong>Remark HRD:</strong> ${item.note}</div>`;
+                        } else if (item.status === 'Rejected by QHSE' && item.note) {
+                            remark = `<div class="text-muted small mt-2"><strong>Remark QHSE:</strong> ${item.note}</div>`;
+                        }
 
                         return `
                             <div class="row align-items-center mb-4">
@@ -469,11 +506,13 @@
                                 <div class="col-md-8">
                                     <div class="fw-semibold">${item.status}</div>
                                     <div class="text-muted small">${item.by_name ?? '-'} (${item.user_badge ?? '-'})</div>
+                                    ${remark}
                                 </div>
                             </div>
                         `;
                     }).join('');
 
+                if (histories.length > 0 || data.status === 'Disetujui') {
                     $historyContent.html(`
                         <div class="position-relative">
                             <div class="vertical-line-full"></div>
@@ -514,6 +553,24 @@
         });
 });
 
+</script>
+
+<script>
+    const notifItems = document.querySelectorAll('.notif-item');
+
+    notifItems.forEach(item => {
+        item.addEventListener('click', function (e) {
+            e.preventDefault();
+
+            const pengajuanId = this.dataset.id;
+
+            // Trigger tombol detail
+            const btnDetail = document.querySelector(`.btn-detail[data-id="${pengajuanId}"]`);
+            if (btnDetail) {
+                btnDetail.click(); // Memicu klik tombol detail
+            }
+        });
+    });
 </script>
 
 <style>
@@ -658,12 +715,24 @@
     .vertical-line-full {
         position: absolute;
         top: 0;
-        bottom: 0;
-        left:226px;
+        left: 150px;
         width: 3px;
+        height: 100%;
         background-color: #F6B543;
         z-index: 0;
     }
+        .timeline-wrapper {
+        position: relative;
+    }
+
+    .bg-warning-qhse {
+        background-color: #ff9800; /* Warna oranye untuk Menunggu QHSE */
+    }
+
+    .bg-warning-hrd {
+        background-color: #cfbb04; /* Warna kuning untuk Menunggu HRD */
+    }
+
 </style>
 
 

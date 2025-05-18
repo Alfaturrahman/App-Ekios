@@ -54,7 +54,7 @@
                                 <span class="badge bg-danger position-absolute top-0 start-100 translate-middle">{{ $notifikasiCount }}</span>
                             @endif
                         </a>
-                        <ul class="dropdown-menu dropdown-menu-end shadow-sm rounded-3" aria-labelledby="dropdownNotifikasi" style="width: 300px;">
+                        <ul class="dropdown-menu dropdown-menu-end shadow-sm rounded-3" aria-labelledby="dropdownNotifikasi" style="width: 300px; max-height: 400px; overflow-y: auto;">
                             <li class="dropdown-header fw-bold px-3 py-2">Notifikasi</li>
                             @if(isset($notifikasiList) && count($notifikasiList) > 0)
                                 @foreach($notifikasiList as $notif)
@@ -81,8 +81,6 @@
                                     <span class="dropdown-item text-muted text-center small py-3">Tidak ada notifikasi baru</span>
                                 </li>
                             @endif
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item text-center small fw-semibold" href="{{ route('notifikasi.index') }}">Lihat Semua</a></li>
                         </ul>
                     </li>
                     <!-- Profil -->
